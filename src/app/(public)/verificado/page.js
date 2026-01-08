@@ -121,7 +121,7 @@ export default function VerifiedPage() {
             <>
                 <h1 style={{...styles.title, color: '#f87171'}}>Algo salió mal</h1>
                 <p style={styles.text}>{msg}</p>
-                <Link href="/" style={styles.button}>Volver al Inicio</Link>
+                
             </>
         ) : (
             <>
@@ -131,9 +131,7 @@ export default function VerifiedPage() {
                 <h1 style={styles.title}>¡Cuenta Verificada!</h1>
                 <p style={styles.text}>{msg}</p>
                 <div style={styles.divider}></div>
-                <button onClick={() => alert("Aquí irías al Dashboard (Próximamente)")} style={styles.primaryButton}>
-                    Ir a mi Dashboard
-                </button>
+               
             </>
         )}
       </div>
