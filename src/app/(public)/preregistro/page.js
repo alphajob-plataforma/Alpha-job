@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
 // --- ICONOS SVG (Añadidos Escudo, Usuarios y Auriculares para la nueva sección) ---
 const Icons = {
   // ... (Iconos anteriores)
@@ -56,9 +59,7 @@ const globalStyles = `
 
 export default function RegisterFreelancerPage() {
   const router = useRouter();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+  
 
   // Estados de Formulario y UI
   const [loading, setLoading] = useState(false);
