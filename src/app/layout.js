@@ -3,7 +3,7 @@ import '../styles/globals.css'; // Importamos los estilos globales aquí
 
 
 export const metadata = {
-  title: 'Alpha Job',
+  title: 'Chambexy',
   description: 'Plataforma de empleos para freelancers',
 };
 
