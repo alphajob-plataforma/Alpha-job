@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 
 // -----------------------------------------------------------------------------
-// CONFIGURACIÓN SUPABASE (Segura para Vercel Build)
+// CONFIGURACIÓN SUPABASE
 // -----------------------------------------------------------------------------
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- ICONOS SVG ---
+// --- ICONOS SVG (Añadido Building para empresas) ---
 const Icons = {
   Mail: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>,
   User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
@@ -33,6 +33,7 @@ const Icons = {
   Users: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
   Eye: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
   EyeOff: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>,
+  Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="12" y1="22" x2="12" y2="22.01"></line><line x1="12" y1="18" x2="12" y2="18.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line><line x1="12" y1="14" x2="12" y2="14.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="12" y1="10" x2="12" y2="10.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="12" y1="6" x2="12" y2="6.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line></svg>
 };
 
 // --- TEMA ---
@@ -58,18 +59,24 @@ const globalStyles = `
   @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 `;
 
-export default function RegisterFreelancerPage() {
+export default function RegisterPage() {
   const router = useRouter();
+  
+  // ESTADO: Tipo de Usuario
+  const [userType, setUserType] = useState('freelancer'); // 'freelancer' | 'company'
   
   // Estados de Formulario
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   
+  // Estado Unificado
   const [formData, setFormData] = useState({ 
-    firstName: '', lastName: '', email: '', password: '', 
-    birthDate: '', phoneNumber: '', documentId: '', 
-    jobTitleId: '', hourlyRate: '', bio: '', 
-    departmentId: '', provinceId: '', districtId: '', address: '' 
+    // Común
+    email: '', password: '', phoneNumber: '', departmentId: '', provinceId: '', districtId: '', address: '',
+    // Freelancer
+    firstName: '', lastName: '', birthDate: '', documentId: '', jobTitleId: '', hourlyRate: '', bio: '', 
+    // Empresa
+    commercialName: '', taxId: '', industryId: '', companySize: ''
   });
 
   // Estados de Contraseñas y Seguridad
@@ -78,7 +85,7 @@ export default function RegisterFreelancerPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passCriteria, setPassCriteria] = useState({ length: false, hasNumber: false });
 
-  // Estados para "Otros" (Custom)
+  // Estados para "Otros" (Custom - Freelancer)
   const [customRole, setCustomRole] = useState('');
   const [customSkills, setCustomSkills] = useState([]);
   const [customSkillInput, setCustomSkillInput] = useState('');
@@ -88,6 +95,7 @@ export default function RegisterFreelancerPage() {
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
+  const [industries, setIndustries] = useState([]); // Nuevo
   const [skillsList, setSkillsList] = useState([]);
   const [languagesList, setLanguagesList] = useState([]);
   const [skillSearch, setSkillSearch] = useState('');
@@ -104,6 +112,7 @@ export default function RegisterFreelancerPage() {
       const { data: jobs } = await supabase.from('job_titles').select('id, name').order('name'); if (jobs) setJobTitles(jobs);
       const { data: skills } = await supabase.from('skills').select('id, name').order('name'); if (skills) setSkillsList(skills);
       const { data: langs } = await supabase.from('languages').select('id, name').order('name'); if (langs) setLanguagesList(langs);
+      const { data: inds } = await supabase.from('industries').select('id, name').order('name'); if (inds) setIndustries(inds);
     };
     fetchCatalogs();
   }, []);
@@ -119,14 +128,10 @@ export default function RegisterFreelancerPage() {
   // --- HANDLERS ---
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   
-  // Handler para validar contraseña en tiempo real
   const handlePasswordChange = (e) => {
     const val = e.target.value;
     setFormData({ ...formData, password: val });
-    setPassCriteria({
-        length: val.length >= 8,
-        hasNumber: /\d/.test(val)
-    });
+    setPassCriteria({ length: val.length >= 8, hasNumber: /\d/.test(val) });
   };
 
   const addSkill = (skill) => { if (!selectedSkills.includes(skill.id)) setSelectedSkills([...selectedSkills, skill.id]); setSkillSearch(''); };
@@ -141,74 +146,133 @@ export default function RegisterFreelancerPage() {
     setErrorMsg(null);
 
     try {
-      // 1. Validaciones
+      // 1. VALIDACIONES PREVIAS
       if (formData.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
       if (!/\d/.test(formData.password)) throw new Error("La contraseña debe incluir al menos un número.");
       if (formData.password !== confirmPassword) throw new Error("Las contraseñas no coinciden.");
       if (!formData.districtId) throw new Error("Por favor completa tu ubicación (Departamento, Provincia y Distrito).");
-      // Validar Rol (ID o Custom)
-      if (!formData.jobTitleId && !customRole) throw new Error("Selecciona tu Rol Principal o especifica uno.");
-      
+
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       
-      // 2. Registro en Supabase Auth
+      // 2. REGISTRO DE AUTENTICACIÓN (Auth Users)
+      // Nota: Usamos metadata para guardar nombres en Auth, pero lo importante es la BD.
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: formData.email, 
         password: formData.password,
         options: {
-          emailRedirectTo: `${origin}/verificado`, 
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: 'freelancer',
-            birth_date: formData.birthDate,
-            phone_number: formData.phoneNumber
-          },
+            emailRedirectTo: `${origin}/verificado`, 
+            data: { 
+                first_name: userType === 'freelancer' ? formData.firstName : 'Admin', 
+                last_name: userType === 'freelancer' ? formData.lastName : formData.commercialName, 
+                role: userType === 'freelancer' ? 'freelancer' : 'company_admin', 
+            },
         },
       });
 
       if (authError) throw authError;
+      if (!authData.user) throw new Error("No se pudo crear el usuario.");
 
-      // 3. Preparar datos finales (con lógica de "Otros")
-      const finalJobTitleId = formData.jobTitleId === 'other' ? null : parseInt(formData.jobTitleId);
-      const finalCustomTitle = formData.jobTitleId === 'other' ? customRole : null;
+      const userId = authData.user.id;
 
-      if (authData.user && !authData.session) {
-        // Guardar onboarding pendiente
-        const onboardingData = {
-            freelancerData: {
-                birth_date: formData.birthDate,
-                bio: formData.bio,
-                phone_number: formData.phoneNumber,
-                job_title_id: finalJobTitleId,
-                custom_job_title: finalCustomTitle,
-                custom_skills: customSkills,
-                hourly_rate: parseFloat(formData.hourlyRate),
-                document_id: formData.documentId
-            },
-            addressData: {
-                department_id: formData.departmentId,
-                province_id: formData.provinceId,
-                district_id: formData.districtId,
-                direccion: formData.address,
-                country_id: 'PE' 
-            },
-            skills: selectedSkills,     
-            languages: selectedLanguages 
-        };
+      // 3. INSERTAR EN TABLA PUBLIC.PROFILES (Tabla Padre)
+      // Esto es obligatorio antes de crear freelancer o company
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        role: userType === 'freelancer' ? 'freelancer' : 'company_admin',
+        phone_number: formData.phoneNumber,
+        address: formData.address,
+        country_id: 'PE', // Asumimos Perú por defecto según tu esquema
+        updated_at: new Date()
+      });
 
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('pending_email', formData.email);
-            localStorage.setItem('pending_onboarding', JSON.stringify(onboardingData));
+      if (profileError) throw new Error(`Error creando perfil: ${profileError.message}`);
+
+      // 4. LÓGICA ESPECÍFICA (Freelancer o Empresa)
+      
+      if (userType === 'freelancer') {
+        // --- A) FREELANCER ---
+        const finalJobTitleId = formData.jobTitleId === 'other' ? null : parseInt(formData.jobTitleId);
+        
+        // A.1 Insertar en tabla FREELANCERS
+        const { error: freeError } = await supabase.from('freelancers').insert({
+            id: userId, // Es la misma PK que profiles
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            bio: formData.bio,
+            birth_date: formData.birthDate,
+            phone_number: formData.phoneNumber, // Es unique en tu esquema
+            job_title_id: finalJobTitleId,
+            custom_job_title: formData.jobTitleId === 'other' ? customRole : null,
+            hourly_rate: parseFloat(formData.hourlyRate),
+            document_id: formData.documentId,
+            custom_skills: customSkills, // Array de strings
+            availability: 'available' // Valor por defecto del enum
+        });
+        if (freeError) throw new Error(`Error creando freelancer: ${freeError.message}`);
+
+        // A.2 Insertar DIRECCIÓN (Tabla freelancer_direccion)
+        const { error: addrError } = await supabase.from('freelancer_direccion').insert({
+            freelancer_id: userId,
+            country_id: 'PE',
+            department_id: formData.departmentId,
+            province_id: formData.provinceId,
+            district_id: formData.districtId,
+            direccion: formData.address
+        });
+        if (addrError) console.error("Error guardando dirección:", addrError);
+
+        // A.3 Insertar SKILLS (Tabla pivote freelancer_skills)
+        if (selectedSkills.length > 0) {
+            const skillsToInsert = selectedSkills.map(skillId => ({
+                freelancer_id: userId,
+                skill_id: skillId,
+                level: 1 // Nivel por defecto, podrías pedirlo en el form
+            }));
+            const { error: skillError } = await supabase.from('freelancer_skills').insert(skillsToInsert);
+            if (skillError) console.error("Error guardando skills:", skillError);
         }
 
-        // REDIRECCIÓN DIRECTA A /verificado
-        router.push('/verificado');
-      } 
+      } else {
+        // --- B) EMPRESA ---
+        
+        // B.1 Crear la EMPRESA (Tabla companies)
+        // Nota: Company tiene su propio ID (uuid), no usa el userId del auth
+        const { data: companyData, error: compError } = await supabase.from('companies').insert({
+            commercial_name: formData.commercialName,
+            legal_name: formData.commercialName, // O podrías pedirlo aparte
+            tax_id: formData.taxId,
+            industry_id: parseInt(formData.industryId),
+            size: formData.companySize, // Asegúrate que coincida con tu ENUM o USER-DEFINED TYPE
+            is_verified: false
+        }).select().single(); // select() devuelve el registro creado con su ID
+
+        if (compError) throw new Error(`Error creando empresa: ${compError.message}`);
+        
+        const newCompanyId = companyData.id;
+
+        // B.2 Vincular Usuario con Empresa (Team Members)
+        const { error: memberError } = await supabase.from('company_team_members').insert({
+            company_id: newCompanyId,
+            profile_id: userId, // El usuario que se acaba de registrar
+            role: 'owner',      // Rol dentro de la empresa
+            status: 'active'
+        });
+
+        if (memberError) throw new Error(`Error vinculando miembro: ${memberError.message}`);
+      }
+
+      // 5. REDIRECCIÓN EXITOSA
+      // Limpiamos datos locales si hubiera
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pending_onboarding'); 
+        localStorage.setItem('user_email', formData.email); // Solo para mostrarlo en la sig pantalla
+      }
+      
+      router.push('/verificado');
 
     } catch (error) {
-      console.error(error);
-      setErrorMsg(error.message || 'Error al registrar.');
+      console.error("Error completo:", error);
+      setErrorMsg(error.message || 'Ocurrió un error inesperado.');
     } finally {
       setLoading(false);
     }
@@ -219,7 +283,7 @@ export default function RegisterFreelancerPage() {
       <style>{globalStyles}</style>
 
       {/* --- MODALES --- */}
-      <Modal isOpen={activeModal === 'support'} onClose={() => setActiveModal(null)} title="Soporte Dedicado">
+       <Modal isOpen={activeModal === 'support'} onClose={() => setActiveModal(null)} title="Soporte Dedicado">
         <p style={{marginBottom: '15px'}}>Nuestro equipo de soporte está disponible 24/7 para ayudarte con cualquier problema durante tu registro.</p>
         <ul style={{color: theme.textSecondary, marginBottom: '20px', paddingLeft: '20px'}}>
             <li>Chat en vivo: <span style={{color: theme.primary}}>Disponible</span></li>
@@ -243,7 +307,6 @@ export default function RegisterFreelancerPage() {
             Al registrarte en Chambexy, aceptas operar como un profesional independiente.
         </p>
       </Modal>
-
       <div style={styles.blobBackground}>
         <div style={styles.blob1}></div>
         <div style={styles.blob2}></div>
@@ -262,119 +325,155 @@ export default function RegisterFreelancerPage() {
           <button onClick={() => setActiveModal('support')} style={styles.headerLink}>Contactar Soporte</button>
         </div>
 
-        {/* CONTENIDO PRINCIPAL - FORMULARIO */}
+        {/* HERO */}
         <div style={styles.heroSection}>
-            <div style={styles.pillBadge}><span style={styles.pillDot}></span>REGISTRO FREELANCER</div>
-            <h1 style={styles.heroTitle}>El Futuro del <br/> Freelance está aquí.</h1>
-            <p style={styles.heroSubtitle}>Completa tu perfil profesional y accede a las mejores oportunidades laborales verificadas.</p>
+            <div style={styles.pillBadge}><span style={styles.pillDot}></span>
+                {userType === 'freelancer' ? 'REGISTRO TALENTO' : 'REGISTRO EMPRESA'}
+            </div>
+            <h1 style={styles.heroTitle}>
+                {userType === 'freelancer' ? 'El Futuro del Freelance.' : 'Contrata Expertos.'}
+            </h1>
+            <p style={styles.heroSubtitle}>
+                {userType === 'freelancer' 
+                 ? 'Completa tu perfil y accede a las mejores oportunidades.' 
+                 : 'Publica proyectos y conecta con el mejor talento verificado.'}
+            </p>
+        </div>
+
+        {/* --- TOGGLE TIPO DE CUENTA --- */}
+        <div style={styles.toggleContainer}>
+            <button 
+                type="button" 
+                onClick={() => setUserType('freelancer')}
+                style={userType === 'freelancer' ? styles.toggleBtnActive : styles.toggleBtnInactive}
+            >
+                <Icons.User /> Quiero Trabajar
+            </button>
+            <button 
+                type="button" 
+                onClick={() => setUserType('company')}
+                style={userType === 'company' ? styles.toggleBtnActive : styles.toggleBtnInactive}
+            >
+                <Icons.Briefcase /> Quiero Contratar
+            </button>
         </div>
 
         <div style={styles.formCardContainer}>
             <div style={styles.glowEffect}></div>
             <form onSubmit={handleRegister} style={styles.formCard}>
                 
-                {/* 1. SECCIÓN DATOS DE ACCESO MEJORADA */}
+                {/* 1. DATOS DE ACCESO (COMÚN Y CON OJITOS) */}
                 <div style={styles.formSection}>
-                    <h3 style={styles.sectionTitle}>Datos de Acceso</h3>
+                    <h3 style={styles.sectionTitle}>Datos de Cuenta</h3>
+                    <InputClassic label="Correo Electrónico" icon={<Icons.Mail/>} name="email" type="email" placeholder="hola@ejemplo.com" onChange={handleChange} required />
                     
-                    {/* Correo Ocupa Fila Completa */}
-                    <div style={{marginBottom: '20px'}}>
-                        <InputClassic label="Correo Electrónico" icon={<Icons.Mail/>} name="email" type="email" placeholder="hola@ejemplo.com" onChange={handleChange} required />
-                    </div>
-                    
-                    {/* Contraseñas Una al lado de Otra */}
                     <div style={styles.row}>
-                        {/* Contraseña Principal */}
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>Contraseña *</label>
                             <div style={{...styles.inputWrapper, paddingRight: '40px'}}>
                                 <span style={styles.iconSpan}><Icons.Lock/></span>
-                                <input 
-                                    name="password" type={showPassword ? "text" : "password"} placeholder="Min. 8 caracteres"
-                                    onChange={handlePasswordChange} style={{...styles.inputElement, paddingLeft: '45px'}}
-                                />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                                    {showPassword ? <Icons.EyeOff/> : <Icons.Eye/>}
-                                </button>
+                                <input name="password" type={showPassword ? "text" : "password"} placeholder="Min. 8 caracteres" onChange={handlePasswordChange} style={{...styles.inputElement, paddingLeft: '45px'}} />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>{showPassword ? <Icons.EyeOff/> : <Icons.Eye/>}</button>
                             </div>
-                            {/* Feedback tiempo real */}
                             <div style={{marginTop: '8px', fontSize: '0.75rem', display: 'flex', gap: '10px'}}>
-                                <span style={{ color: passCriteria.length ? '#7ADCFC' : '#666', transition: '0.3s' }}>
-                                    {passCriteria.length ? '✓' : '○'} Min. 8 letras
-                                </span>
-                                <span style={{ color: passCriteria.hasNumber ? '#7ADCFC' : '#666', transition: '0.3s' }}>
-                                    {passCriteria.hasNumber ? '✓' : '○'} 1 Número
-                                </span>
+                                <span style={{ color: passCriteria.length ? '#7ADCFC' : '#666' }}>{passCriteria.length ? '✓' : '○'} Min. 8 letras</span>
+                                <span style={{ color: passCriteria.hasNumber ? '#7ADCFC' : '#666' }}>{passCriteria.hasNumber ? '✓' : '○'} 1 Número</span>
                             </div>
                         </div>
 
-                        {/* Confirmar Contraseña */}
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>Confirmar Contraseña *</label>
                             <div style={{...styles.inputWrapper, paddingRight: '40px'}}>
                                 <span style={styles.iconSpan}><Icons.Lock/></span>
-                                <input 
-                                    name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Repite la contraseña"
-                                    value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} 
-                                    style={{...styles.inputElement, paddingLeft: '45px'}}
-                                />
-                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn}>
-                                    {showConfirmPassword ? <Icons.EyeOff/> : <Icons.Eye/>}
-                                </button>
+                                <input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Repite la contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{...styles.inputElement, paddingLeft: '45px'}} />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn}>{showConfirmPassword ? <Icons.EyeOff/> : <Icons.Eye/>}</button>
                             </div>
-                            {/* Feedback coincidencia */}
-                            {confirmPassword && (
-                                <span style={{
-                                    color: confirmPassword === formData.password ? '#7ADCFC' : '#ff6b6b', 
-                                    fontSize: '0.75rem', marginTop: '5px', display:'block'
-                                }}>
-                                    {confirmPassword === formData.password ? '✓ Coinciden' : '✕ No coinciden'}
-                                </span>
-                            )}
+                            {confirmPassword && (<span style={{color: confirmPassword === formData.password ? '#7ADCFC' : '#ff6b6b', fontSize: '0.75rem', marginTop: '5px'}}>{confirmPassword === formData.password ? '✓ Coinciden' : '✕ No coinciden'}</span>)}
                         </div>
                     </div>
                 </div>
 
-                {/* 2. PERSONAL */}
-                <div style={styles.formSection}>
-                    <h3 style={styles.sectionTitle}>Información Personal</h3>
-                    <div style={styles.row}>
-                        <InputClassic label="Nombres" icon={<Icons.User/>} name="firstName" onChange={handleChange} required />
-                        <InputClassic label="Apellidos" icon={<Icons.User/>} name="lastName" onChange={handleChange} required />
-                    </div>
-                    <div style={styles.grid3}>
-                        <InputClassic label="DNI" icon={<Icons.FileText/>} name="documentId" onChange={handleChange} required />
-                        <InputClassic label="Teléfono" icon={<Icons.Phone/>} name="phoneNumber" onChange={handleChange} required />
-                        <InputClassic label="Fecha Nac." icon={<Icons.Calendar/>} name="birthDate" type="date" onChange={handleChange} required />
-                    </div>
-                </div>
+                {/* --- RENDER CONDICIONAL --- */}
+                {userType === 'freelancer' ? (
+                    <>
+                        <div style={styles.formSection}>
+                            <h3 style={styles.sectionTitle}>Datos Personales</h3>
+                            <div style={styles.row}>
+                                <InputClassic label="Nombres" icon={<Icons.User/>} name="firstName" onChange={handleChange} required />
+                                <InputClassic label="Apellidos" icon={<Icons.User/>} name="lastName" onChange={handleChange} required />
+                            </div>
+                            <div style={styles.grid3}>
+                                <InputClassic label="DNI" icon={<Icons.FileText/>} name="documentId" onChange={handleChange} required />
+                                <InputClassic label="Teléfono" icon={<Icons.Phone/>} name="phoneNumber" onChange={handleChange} required />
+                                <InputClassic label="Fecha Nac." icon={<Icons.Calendar/>} name="birthDate" type="date" onChange={handleChange} required />
+                            </div>
+                        </div>
 
-                {/* 3. PERFIL Y UBICACIÓN (Con lógica 'Otros') */}
-                <div style={styles.formSection}>
-                    <h3 style={styles.sectionTitle}>Perfil Profesional</h3>
-                    <div style={styles.row}>
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '10px', width: '100%'}}>
-                            <SelectClassic label="Rol Principal" icon={<Icons.Briefcase/>} name="jobTitleId" onChange={handleChange} required value={formData.jobTitleId}>
-                                <option value="" disabled>Selecciona tu rol...</option>
-                                {jobTitles.map(j => <option key={j.id} value={j.id}>{j.name}</option>)}
-                                <option value="other" style={{fontWeight: 'bold', color: theme.primary}}>+ Otro (Especificar)</option>
+                        <div style={styles.formSection}>
+                            <h3 style={styles.sectionTitle}>Perfil Profesional</h3>
+                            <div style={styles.row}>
+                                <div style={{width: '100%'}}>
+                                    <SelectClassic label="Rol Principal" icon={<Icons.Briefcase/>} name="jobTitleId" onChange={handleChange} required value={formData.jobTitleId}>
+                                        <option value="" disabled>Selecciona...</option>
+                                        {jobTitles.map(j => <option key={j.id} value={j.id}>{j.name}</option>)}
+                                        <option value="other" style={{color: theme.primary}}>+ Otro</option>
+                                    </SelectClassic>
+                                    {formData.jobTitleId === 'other' && (<input type="text" placeholder="Especifique..." value={customRole} onChange={(e) => setCustomRole(e.target.value)} style={{...styles.inputElement, marginTop:'5px', borderBottom:`1px solid ${theme.primary}`}} />)}
+                                </div>
+                                <InputClassic label="Tarifa Hora (USD)" icon={<Icons.Dollar/>} name="hourlyRate" type="number" step="0.01" onChange={handleChange} required />
+                            </div>
+                            <div style={styles.inputGroup}><label style={styles.label}>Sobre ti (Bio)</label><textarea name="bio" onChange={handleChange} placeholder="Breve resumen..." style={styles.textArea} /></div>
+                        </div>
+
+                        <div style={styles.formSection}>
+                            <h3 style={styles.sectionTitle}>Habilidades</h3>
+                            <div style={{position: 'relative'}}>
+                                <InputClassic label="Buscar Habilidad" icon={<Icons.Search/>} value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
+                                {skillSearch && filteredSkills.length > 0 && (<div style={styles.dropdownMenu}>{filteredSkills.map(skill => <DropdownItem key={skill.id} onClick={() => addSkill(skill)}>{skill.name}</DropdownItem>)}</div>)}
+                            </div>
+                            {/* Skill Manual */}
+                            <div style={{marginTop: '5px', marginBottom: '15px', display: 'flex', gap: '10px', alignItems: 'center'}}>
+                                <input type="text" placeholder="¿No está? Añade otra..." value={customSkillInput} onChange={(e) => setCustomSkillInput(e.target.value)} style={{...styles.inputElement, fontSize: '0.85rem', padding: '8px 15px', border: `1px dashed ${theme.borderLight}`}} />
+                                <button type="button" onClick={() => { if(customSkillInput.trim()){ setCustomSkills([...customSkills, customSkillInput.trim()]); setCustomSkillInput(''); }}} style={{...styles.addBtn, height: '35px', width: '35px'}}><Icons.Plus/></button>
+                            </div>
+                            <div style={styles.chipContainer}>
+                                {selectedSkills.map(sid => <span key={sid} style={styles.chip}>{skillsList.find(s => s.id === sid)?.name}<button type="button" onClick={() => removeSkill(sid)} style={styles.removeBtn}><Icons.X/></button></span>)}
+                                {customSkills.map((sk, idx) => <span key={`c-${idx}`} style={{...styles.chip, border: '1px dashed ' + theme.primary}}>{sk}<button type="button" onClick={() => setCustomSkills(customSkills.filter((_, i) => i !== idx))} style={styles.removeBtn}><Icons.X/></button></span>)}
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    /* FORMULARIO EMPRESA */
+                    <>
+                        <div style={styles.formSection}>
+                            <h3 style={styles.sectionTitle}>Datos de la Empresa</h3>
+                            <InputClassic label="Razón Social / Nombre Comercial" icon={<Icons.Building/>} name="commercialName" onChange={handleChange} required placeholder="Ej. Tech Solutions SAC" />
+                            
+                            <div style={styles.row}>
+                                <InputClassic label="RUC / Tax ID" icon={<Icons.FileText/>} name="taxId" onChange={handleChange} required placeholder="20123456789" />
+                                <SelectClassic label="Tamaño Empresa" icon={<Icons.Users/>} name="companySize" onChange={handleChange} required>
+                                    <option value="">Selecciona...</option>
+                                    <option value="1-10">1-10 empleados</option>
+                                    <option value="11-50">11-50 empleados</option>
+                                    <option value="51-200">51-200 empleados</option>
+                                    <option value="200+">200+ empleados</option>
+                                </SelectClassic>
+                            </div>
+
+                            <SelectClassic label="Industria" icon={<Icons.Briefcase/>} name="industryId" onChange={handleChange} required>
+                                <option value="" disabled>Selecciona Sector...</option>
+                                {industries.map(ind => <option key={ind.id} value={ind.id}>{ind.name}</option>)}
                             </SelectClassic>
-                            {/* Input extra si elige 'other' */}
-                            {formData.jobTitleId === 'other' && (
-                                <input 
-                                    type="text" placeholder="Escribe tu rol específico..." value={customRole} onChange={(e) => setCustomRole(e.target.value)}
-                                    style={{...styles.inputElement, border: `1px solid ${theme.primary}`, backgroundColor: 'rgba(122, 220, 182, 0.05)'}} 
-                                />
-                            )}
+                            
+                            <InputClassic label="Teléfono de Contacto" icon={<Icons.Phone/>} name="phoneNumber" onChange={handleChange} required />
                         </div>
-                        <InputClassic label="Tarifa Hora (USD)" icon={<Icons.Dollar/>} name="hourlyRate" type="number" step="0.01" onChange={handleChange} required />
-                    </div>
+                    </>
+                )}
 
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Sobre ti (Bio)</label>
-                        <textarea name="bio" onChange={handleChange} placeholder="Breve resumen..." style={styles.textArea} />
-                    </div>
-                        <div style={styles.grid3}>
+                {/* UBICACIÓN (Común) */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.sectionTitle}>Ubicación {userType === 'company' ? 'Fiscal' : ''}</h3>
+                    <div style={styles.grid3}>
                         <SelectClassic label="Departamento" icon={<Icons.MapPin/>} name="departmentId" onChange={handleChange} required value={formData.departmentId}>
                             <option value="" disabled>Selecciona...</option>
                             {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -388,71 +487,19 @@ export default function RegisterFreelancerPage() {
                             {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                         </SelectClassic>
                     </div>
-                        <InputClassic label="Dirección Exacta" icon={<Icons.MapPin/>} name="address" placeholder="Av. Principal #123" onChange={handleChange} required />
-                </div>
-
-                {/* 4. SKILLS & IDIOMAS (Con lógica Skill Manual) */}
-                <div style={styles.formSection}>
-                    <h3 style={styles.sectionTitle}>Habilidades</h3>
-                    <div style={{position: 'relative'}}>
-                        <InputClassic label="Buscar Habilidad" icon={<Icons.Search/>} value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} placeholder="Ej. React..." />
-                        {skillSearch && filteredSkills.length > 0 && (
-                            <div style={styles.dropdownMenu}>
-                                {filteredSkills.map(skill => <DropdownItem key={skill.id} onClick={() => addSkill(skill)}>{skill.name}</DropdownItem>)}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Input para Skill Manual */}
-                    <div style={{marginTop: '5px', marginBottom: '15px', display: 'flex', gap: '10px', alignItems: 'center'}}>
-                         <input 
-                            type="text" placeholder="¿No está? Añade otra..." value={customSkillInput}
-                            onChange={(e) => setCustomSkillInput(e.target.value)}
-                            style={{...styles.inputElement, fontSize: '0.85rem', padding: '8px 15px', border: `1px dashed ${theme.borderLight}`}}
-                         />
-                         <button type="button" onClick={() => { if(customSkillInput.trim()){ setCustomSkills([...customSkills, customSkillInput.trim()]); setCustomSkillInput(''); }}} style={{...styles.addBtn, height: '35px', width: '35px'}}>
-                            <Icons.Plus/>
-                         </button>
-                    </div>
-
-                    <div style={styles.chipContainer}>
-                        {selectedSkills.map(sid => <span key={sid} style={styles.chip}>{skillsList.find(s => s.id === sid)?.name}<button type="button" onClick={() => removeSkill(sid)} style={styles.removeBtn}><Icons.X/></button></span>)}
-                        {/* Chips de Custom Skills */}
-                        {customSkills.map((sk, idx) => <span key={`c-${idx}`} style={{...styles.chip, border: '1px dashed ' + theme.primary}}>{sk}<button type="button" onClick={() => setCustomSkills(customSkills.filter((_, i) => i !== idx))} style={styles.removeBtn}><Icons.X/></button></span>)}
-                    </div>
-
-                    <div style={styles.languageRow}>
-                        <div style={{flex: 1}}>
-                            <SelectClassic label="Añadir Idioma" icon={<Icons.Globe/>} value={tempLangId} onChange={(e) => setTempLangId(e.target.value)} >
-                                <option value="" disabled>Idioma...</option>
-                                {languagesList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                            </SelectClassic>
-                        </div>
-                        <div style={{width: '120px'}}>
-                            <SelectClassic label="Nivel" icon={null} value={tempLangLevel} onChange={(e) => setTempLangLevel(e.target.value)}>
-                                <option value="Básico">Básico</option>
-                                <option value="Intermedio">Intermedio</option>
-                                <option value="Avanzado">Avanzado</option>
-                                <option value="Nativo">Nativo</option>
-                            </SelectClassic>
-                        </div>
-                        <button type="button" onClick={addLanguage} style={styles.addBtn}><Icons.Plus/></button>
-                    </div>
-                    <div style={styles.chipContainer}>
-                        {selectedLanguages.map(item => <span key={item.id} style={styles.chip}>{languagesList.find(l => l.id === item.id)?.name} ({item.level})<button type="button" onClick={() => removeLanguage(item.id)} style={styles.removeBtn}><Icons.X/></button></span>)}
-                    </div>
+                    <InputClassic label="Dirección Exacta" icon={<Icons.MapPin/>} name="address" placeholder="Av. Principal #123, Of. 401" onChange={handleChange} required />
                 </div>
 
                 {errorMsg && <div style={styles.errorAlert}>⚠️ {errorMsg}</div>}
 
                 <button type="submit" disabled={loading} style={loading ? {...styles.submitBtn, opacity: 0.7} : styles.submitBtn}>
-                    {loading ? 'Creando Perfil...' : 'Completar Registro'}
+                    {loading ? 'Procesando...' : (userType === 'freelancer' ? 'Crear Perfil Freelancer' : 'Crear Cuenta Empresa')}
                 </button>
                 
             </form>
         </div>
 
-        {/* --- CARACTERÍSTICAS --- */}
+        {/* FEATURES FOOTER */}
         <div style={styles.featuresSection}>
             <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Icons.Globe /></div>
@@ -475,7 +522,7 @@ export default function RegisterFreelancerPage() {
                 <p style={styles.featureText}>Un mercado construido por freelancers, para freelancers.</p>
             </div>
         </div>
-
+        
         {/* FOOTER */}
         <footer style={styles.footer}>
             <div style={styles.footerLinks}>
@@ -490,23 +537,18 @@ export default function RegisterFreelancerPage() {
   );
 }
 
-// --- COMPONENTES UI Y ESTILOS ---
-
+// --- COMPONENTES UI AUXILIARES ---
 function Modal({ isOpen, onClose, title, children }) {
     if (!isOpen) return null;
     return (
         <div style={styles.modalOverlay} onClick={onClose}>
             <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
-                <div style={styles.modalHeader}>
-                    <h3 style={styles.modalTitle}>{title}</h3>
-                    <button onClick={onClose} style={styles.closeModalBtn}><Icons.X/></button>
-                </div>
+                <div style={styles.modalHeader}><h3 style={styles.modalTitle}>{title}</h3><button onClick={onClose} style={styles.closeModalBtn}><Icons.X/></button></div>
                 <div style={styles.modalContent}>{children}</div>
             </div>
         </div>
     )
 }
-
 function InputClassic({ label, icon, ...props }) {
     const [focused, setFocused] = useState(false);
     return (
@@ -519,7 +561,6 @@ function InputClassic({ label, icon, ...props }) {
         </div>
     )
 }
-
 function SelectClassic({ label, icon, children, ...props }) {
     const [focused, setFocused] = useState(false);
     return (
@@ -533,31 +574,34 @@ function SelectClassic({ label, icon, children, ...props }) {
         </div>
     )
 }
-
 function DropdownItem({ children, onClick }) {
     const [hover, setHover] = useState(false);
-    return (
-        <button type="button" onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{...styles.dropdownItem, backgroundColor: hover ? theme.scrollbarThumb : 'transparent', color: hover ? theme.primary : '#fff'}}>
-            {children}
-        </button>
-    )
+    return <button type="button" onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{...styles.dropdownItem, backgroundColor: hover ? theme.scrollbarThumb : 'transparent', color: hover ? theme.primary : '#fff'}}>{children}</button>
 }
 
+// --- ESTILOS ---
 const styles = {
     pageContainer: { minHeight: '100vh', width: '100%', backgroundColor: theme.bgDark, color: '#fff', fontFamily: "'Inter', sans-serif", position: 'relative', overflowX: 'hidden' },
     blobBackground: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' },
     blob1: { position: 'absolute', top: '-10%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(122, 220, 182, 0.1) 0%, rgba(19, 22, 22, 0) 70%)', borderRadius: '50%' },
     blob2: { position: 'absolute', bottom: '-10%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(122, 220, 182, 0.05) 0%, rgba(19, 22, 22, 0) 70%)', borderRadius: '50%' },
     contentWrapper: { position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' },
-    header: { width: '100%', maxWidth: '1200px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', marginBottom: '40px' },
+    header: { width: '100%', maxWidth: '1200px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', marginBottom: '20px' },
     logoContainer: { display: 'flex', alignItems: 'center', gap: '10px' },
     logoText: { fontSize: '1.2rem', fontWeight: 'bold' },
     headerLink: { background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '0.9rem', transition: 'color 0.2s', padding: 0 },
-    heroSection: { textAlign: 'center', marginBottom: '40px', maxWidth: '700px' },
+    
+    // HERO & TOGGLE
+    heroSection: { textAlign: 'center', marginBottom: '30px', maxWidth: '700px' },
     pillBadge: { display: 'inline-flex', alignItems: 'center', padding: '6px 12px', backgroundColor: theme.surfaceDark, border: `1px solid ${theme.borderLight}`, borderRadius: '999px', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', color: theme.primary, marginBottom: '16px' },
     pillDot: { width: '8px', height: '8px', backgroundColor: theme.primary, borderRadius: '50%', marginRight: '8px' },
-    heroTitle: { fontSize: '3.5rem', fontWeight: '800', lineHeight: 1.1, background: `linear-gradient(to right, ${theme.primary}, #fff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 16px 0' },
-    heroSubtitle: { color: theme.textSecondary, fontSize: '1.1rem', lineHeight: 1.5 },
+    heroTitle: { fontSize: '2.5rem', fontWeight: '800', lineHeight: 1.1, background: `linear-gradient(to right, ${theme.primary}, #fff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 16px 0' },
+    heroSubtitle: { color: theme.textSecondary, fontSize: '1rem', lineHeight: 1.5 },
+    toggleContainer: { display: 'flex', gap: '15px', marginBottom: '30px', padding: '5px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: `1px solid ${theme.borderLight}` },
+    toggleBtnActive: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 24px', backgroundColor: theme.primary, color: theme.bgDark, border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' },
+    toggleBtnInactive: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 24px', backgroundColor: 'transparent', color: theme.textSecondary, border: 'none', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' },
+
+    // FORM CARD
     formCardContainer: { position: 'relative', width: '100%', maxWidth: '750px', marginBottom: '80px' },
     glowEffect: { position: 'absolute', inset: '-2px', background: `linear-gradient(45deg, ${theme.primary}33, transparent, ${theme.primary}33)`, borderRadius: '24px', filter: 'blur(20px)', zIndex: -1 },
     formCard: { backgroundColor: 'rgba(29, 37, 34, 0.95)', border: `1px solid ${theme.borderLight}`, borderRadius: '24px', padding: '40px', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', display: 'flex', flexDirection: 'column', gap: '24px' },
@@ -578,16 +622,23 @@ const styles = {
     chipContainer: { display: 'flex', flexWrap: 'wrap', gap: '8px' },
     chip: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '99px', backgroundColor: theme.bgDark, border: `1px solid ${theme.borderLight}`, fontSize: '0.85rem', color: '#fff' },
     removeBtn: { background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: 0, display: 'flex' },
-    languageRow: { display: 'flex', gap: '10px', alignItems: 'flex-end' },
     addBtn: { backgroundColor: theme.primary, color: theme.bgDark, border: 'none', borderRadius: '12px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
     submitBtn: { width: '100%', padding: '16px', backgroundColor: theme.primary, color: theme.bgDark, border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', marginTop: '10px', boxShadow: `0 10px 15px -3px ${theme.primary}33`, transition: 'transform 0.1s' },
     loginHint: { textAlign: 'center', marginTop: '16px', fontSize: '0.9rem', color: theme.textSecondary },
     errorAlert: { backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', textAlign: 'center' },
+    eyeBtn: { position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', display: 'flex', padding: '5px' },
+
+    // FEATURES & FOOTER
     featuresSection: { width: '100%', maxWidth: '1000px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginTop: '20px', marginBottom: '80px', textAlign: 'center' },
     featureCard: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' },
     featureIcon: { width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(29, 37, 34, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.primary, border: `1px solid ${theme.borderLight}`, fontSize: '1.2rem' },
     featureTitle: { fontSize: '1.1rem', fontWeight: 'bold', color: '#fff', margin: 0 },
     featureText: { fontSize: '0.9rem', color: theme.textSecondary, lineHeight: '1.5', margin: 0, maxWidth: '250px' },
+    footer: { width: '100%', maxWidth: '1000px', borderTop: `1px solid ${theme.borderLight}`, paddingTop: '40px', textAlign: 'center', color: theme.textSecondary, fontSize: '0.85rem' },
+    footerLinks: { display: 'flex', justifyContent: 'center', gap: '15px', alignItems: 'center', marginBottom: '10px' },
+    footerLink: { background: 'none', border: 'none', color: theme.textSecondary, textDecoration: 'none', cursor: 'pointer', fontSize: '0.85rem', transition: 'color 0.2s', padding: 0 },
+    
+    // MODAL
     modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', animation: 'fadeIn 0.2s ease-out' },
     modalBox: { backgroundColor: theme.bgDark, border: `1px solid ${theme.borderLight}`, borderRadius: '20px', padding: '30px', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', position: 'relative', animation: 'scaleUp 0.3s ease-out' },
     modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
@@ -595,9 +646,4 @@ const styles = {
     closeModalBtn: { background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: '5px' },
     modalContent: { color: '#fff', fontSize: '1rem', lineHeight: 1.6 },
     modalBtn: { backgroundColor: theme.primary, color: theme.bgDark, border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' },
-    footer: { width: '100%', maxWidth: '1000px', borderTop: `1px solid ${theme.borderLight}`, paddingTop: '40px', textAlign: 'center', color: theme.textSecondary, fontSize: '0.85rem' },
-    footerLinks: { display: 'flex', justifyContent: 'center', gap: '15px', alignItems: 'center', marginBottom: '10px' },
-    footerLink: { background: 'none', border: 'none', color: theme.textSecondary, textDecoration: 'none', cursor: 'pointer', fontSize: '0.85rem', transition: 'color 0.2s', padding: 0 },
-    // ESTILO AGREGADO PARA EL BOTÓN DEL OJITO (Para mantener consistencia sin romper el layout original)
-    eyeBtn: { position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', display: 'flex', padding: '5px' }
 };

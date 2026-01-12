@@ -25,7 +25,7 @@ export default function VerificadoPage() {
   const [showModal, setShowModal] = useState(false); // Estado para el modal de soporte
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('pending_email');
+    const storedEmail = localStorage.getItem('user_email');
     if (storedEmail) setEmail(storedEmail);
   }, []);
 
@@ -46,7 +46,7 @@ export default function VerificadoPage() {
             <div style={{color: theme.primary}}>
                 <svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path clipRule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fill="currentColor" fillRule="evenodd"></path><path clipRule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fill="currentColor" fillRule="evenodd"></path></svg>
              </div>
-            <span style={styles.logoText}>AlphaJob</span>
+            <span style={styles.logoText}>Chambexy</span>
           </div>
           <button onClick={() => setShowModal(true)} style={styles.headerLink}>
             Contactar Soporte
@@ -99,10 +99,10 @@ export default function VerificadoPage() {
                     border: `1px solid ${theme.borderLight}`
                 }}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Abre el correo de <strong>AlphaJob</strong></span>
+                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Abre el correo de <strong>Chambexy</strong></span>
                     </div>
                     <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Verifica la confirmación y <strong>Bienvenido a AlphaJob</strong></span>
+                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Verifica la confirmación y <strong>Bienvenido a Chambexy</strong></span>
                     </div>
                 </div>
 
@@ -118,23 +118,23 @@ export default function VerificadoPage() {
         <div style={styles.featuresSection}>
             <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Icons.Globe /></div>
-                <h3 style={styles.featureTitle}>Global</h3>
-                <p style={styles.featureText}>Accede a proyectos en todo el mundo.</p>
+                <h3 style={styles.featureTitle}>Oportunidades Nacionales</h3>
+                <p style={styles.featureText}>Accede a proyectos nacionales y conecta con clientes de todo el Perú.</p>
             </div>
             <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Icons.Shield /></div>
-                <h3 style={styles.featureTitle}>Seguro</h3>
-                <p style={styles.featureText}>Clientes verificados y pagos seguros.</p>
+                <h3 style={styles.featureTitle}>Clientes Verificados</h3>
+                <p style={styles.featureText}>Verificamos a cada cliente para que te concentres en trabajar, no en cobrar.</p>
             </div>
             <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Icons.Headphones /></div>
-                <h3 style={styles.featureTitle}>Soporte</h3>
-                <p style={styles.featureText}>Ayuda dedicada 24/7 para ti.</p>
+                <h3 style={styles.featureTitle}>Soporte Dedicado</h3>
+                <p style={styles.featureText}>Acceso a soporte 24/7 para resolver cualquier duda al instante.</p>
             </div>
             <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Icons.Users /></div>
-                <h3 style={styles.featureTitle}>Comunidad</h3>
-                <p style={styles.featureText}>Hecho por freelancers, para freelancers.</p>
+                <h3 style={styles.featureTitle}>Comunidad Primero</h3>
+                <p style={styles.featureText}>Un mercado construido por freelancers, para freelancers.</p>
             </div>
         </div>
 
@@ -145,7 +145,7 @@ export default function VerificadoPage() {
                 <span>•</span>
                 <button style={styles.footerLink}>Términos de Servicio</button>
             </div>
-            © 2025 AlphaJob. Todos los derechos reservados.
+            © 2025 Chambexy. Todos los derechos reservados.
         </footer>
 
       </div>
@@ -155,7 +155,7 @@ export default function VerificadoPage() {
         <div style={styles.modalOverlay}>
             <div style={styles.modalBox}>
                 <div style={styles.modalHeader}>
-                    <h2 style={styles.modalTitle}>Soporte AlphaJob</h2>
+                    <h2 style={styles.modalTitle}>Soporte Chambexy</h2>
                     <button onClick={() => setShowModal(false)} style={styles.closeModalBtn}>
                         <Icons.X />
                     </button>
