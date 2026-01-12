@@ -154,8 +154,7 @@ export default function RegisterPage() {
 
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       
-      // 2. REGISTRO DE AUTENTICACIÓN (Auth Users)
-      // Nota: Usamos metadata para guardar nombres en Auth, pero lo importante es la BD.
+      // 2. REGISTRO DE AUTENTICACIÓN
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email, 
         password: formData.password,
@@ -174,43 +173,53 @@ export default function RegisterPage() {
 
       const userId = authData.user.id;
 
-      // 3. INSERTAR EN TABLA PUBLIC.PROFILES (Tabla Padre)
-      // Esto es obligatorio antes de crear freelancer o company
-      const { error: profileError } = await supabase.from('profiles').insert({
+      // 3. PERFIL BASE (Tabla: profiles)
+      // Usamos 'upsert' en lugar de 'insert' para evitar errores si tienes triggers automáticos en BD
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: userId,
         role: userType === 'freelancer' ? 'freelancer' : 'company_admin',
         phone_number: formData.phoneNumber,
         address: formData.address,
-        country_id: 'PE', // Asumimos Perú por defecto según tu esquema
+        country_id: 'PE',
         updated_at: new Date()
       });
 
-      if (profileError) throw new Error(`Error creando perfil: ${profileError.message}`);
+      if (profileError) {
+        console.error("Error en Profile:", profileError);
+        throw new Error("Error al crear el perfil base.");
+      }
 
-      // 4. LÓGICA ESPECÍFICA (Freelancer o Empresa)
+      // 4. LÓGICA ESPECÍFICA
       
       if (userType === 'freelancer') {
         // --- A) FREELANCER ---
-        const finalJobTitleId = formData.jobTitleId === 'other' ? null : parseInt(formData.jobTitleId);
         
-        // A.1 Insertar en tabla FREELANCERS
+        // Conversión segura de tipos
+        const jobTitleValue = formData.jobTitleId === 'other' || !formData.jobTitleId ? null : parseInt(formData.jobTitleId);
+        const rateValue = parseFloat(formData.hourlyRate) || 0;
+
+        // A.1 Insertar en FREELANCERS
         const { error: freeError } = await supabase.from('freelancers').insert({
-            id: userId, // Es la misma PK que profiles
+            id: userId,
             first_name: formData.firstName,
             last_name: formData.lastName,
-            bio: formData.bio,
+            bio: formData.bio || '',
             birth_date: formData.birthDate,
-            phone_number: formData.phoneNumber, // Es unique en tu esquema
-            job_title_id: finalJobTitleId,
+            phone_number: formData.phoneNumber,
+            job_title_id: jobTitleValue,
             custom_job_title: formData.jobTitleId === 'other' ? customRole : null,
-            hourly_rate: parseFloat(formData.hourlyRate),
+            hourly_rate: rateValue,
             document_id: formData.documentId,
             custom_skills: customSkills, // Array de strings
-            availability: 'available' // Valor por defecto del enum
+            availability: 'available'
         });
-        if (freeError) throw new Error(`Error creando freelancer: ${freeError.message}`);
 
-        // A.2 Insertar DIRECCIÓN (Tabla freelancer_direccion)
+        if (freeError) {
+            console.error("Error en Freelancer Table:", freeError);
+            throw new Error(`Error guardando datos de freelancer: ${freeError.message}`);
+        }
+
+        // A.2 Insertar DIRECCIÓN
         const { error: addrError } = await supabase.from('freelancer_direccion').insert({
             freelancer_id: userId,
             country_id: 'PE',
@@ -219,14 +228,15 @@ export default function RegisterPage() {
             district_id: formData.districtId,
             direccion: formData.address
         });
-        if (addrError) console.error("Error guardando dirección:", addrError);
+        
+        if (addrError) console.error("Error guardando dirección (no crítico):", addrError);
 
-        // A.3 Insertar SKILLS (Tabla pivote freelancer_skills)
+        // A.3 Insertar SKILLS (Tabla pivote)
         if (selectedSkills.length > 0) {
             const skillsToInsert = selectedSkills.map(skillId => ({
                 freelancer_id: userId,
-                skill_id: skillId,
-                level: 1 // Nivel por defecto, podrías pedirlo en el form
+                skill_id: parseInt(skillId), // Asegurar que sea entero
+                level: 1
             }));
             const { error: skillError } = await supabase.from('freelancer_skills').insert(skillsToInsert);
             if (skillError) console.error("Error guardando skills:", skillError);
@@ -235,44 +245,48 @@ export default function RegisterPage() {
       } else {
         // --- B) EMPRESA ---
         
-        // B.1 Crear la EMPRESA (Tabla companies)
-        // Nota: Company tiene su propio ID (uuid), no usa el userId del auth
+        // Conversión segura de tipos
+        const industryValue = parseInt(formData.industryId) || null;
+
+        // B.1 Crear EMPRESA
         const { data: companyData, error: compError } = await supabase.from('companies').insert({
             commercial_name: formData.commercialName,
-            legal_name: formData.commercialName, // O podrías pedirlo aparte
+            legal_name: formData.commercialName,
             tax_id: formData.taxId,
-            industry_id: parseInt(formData.industryId),
-            size: formData.companySize, // Asegúrate que coincida con tu ENUM o USER-DEFINED TYPE
+            industry_id: industryValue,
+            size: formData.companySize,
             is_verified: false
-        }).select().single(); // select() devuelve el registro creado con su ID
+        }).select().single();
 
-        if (compError) throw new Error(`Error creando empresa: ${compError.message}`);
+        if (compError) {
+            console.error("Error en Companies Table:", compError);
+            throw new Error(`Error creando empresa: ${compError.message}`);
+        }
         
         const newCompanyId = companyData.id;
 
-        // B.2 Vincular Usuario con Empresa (Team Members)
+        // B.2 Vincular Usuario con Empresa
         const { error: memberError } = await supabase.from('company_team_members').insert({
             company_id: newCompanyId,
-            profile_id: userId, // El usuario que se acaba de registrar
-            role: 'owner',      // Rol dentro de la empresa
+            profile_id: userId,
+            role: 'owner',
             status: 'active'
         });
 
-        if (memberError) throw new Error(`Error vinculando miembro: ${memberError.message}`);
+        if (memberError) throw new Error("Error vinculando administrador a la empresa.");
       }
 
       // 5. REDIRECCIÓN EXITOSA
-      // Limpiamos datos locales si hubiera
       if (typeof window !== 'undefined') {
         localStorage.removeItem('pending_onboarding'); 
-        localStorage.setItem('user_email', formData.email); // Solo para mostrarlo en la sig pantalla
+        localStorage.setItem('user_email', formData.email);
       }
       
       router.push('/verificado');
 
     } catch (error) {
-      console.error("Error completo:", error);
-      setErrorMsg(error.message || 'Ocurrió un error inesperado.');
+      console.error("Error en el proceso de registro:", error);
+      setErrorMsg(error.message || 'Ocurrió un error inesperado al guardar los datos.');
     } finally {
       setLoading(false);
     }
