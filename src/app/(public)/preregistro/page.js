@@ -277,6 +277,63 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+  // --- ESTILOS CSS INYECTADOS (Animaciones + Responsive) ---
+// --- ESTILOS CSS INYECTADOS (Animaciones + Responsive Total) ---
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = `
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* ESTILOS MÓVILES (Celulares) */
+    @media (max-width: 768px) {
+      
+      /* 1. Contenedor principal sin márgenes extraños */
+      .responsive-wrapper {
+        padding: 15px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      /* 2. HEADER: Logo arriba, botón abajo */
+      .responsive-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 25px !important;
+      }
+
+      /* 3. TÍTULO: Tamaño legible en móvil */
+      .responsive-title {
+        font-size: 2rem !important; 
+        line-height: 1.2 !important;
+      }
+
+      /* 4. TARJETA: Aprovechar todo el ancho */
+      .responsive-card {
+        padding: 20px 15px !important; /* Menos relleno a los lados */
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      /* --- AQUÍ ESTÁ LA SOLUCIÓN DE LOS INPUTS --- */
+      /* 5. Romper las filas y columnas para que sean verticales */
+      .mobile-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important; /* Espacio entre inputs verticales */
+        grid-template-columns: 1fr !important; /* Por si acaso es grid */
+      }
+      
+      /* Asegurar que el input o select ocupe todo el espacio */
+      .mobile-stack > div {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
 
   return (
     <div style={styles.pageContainer}>
@@ -312,10 +369,10 @@ export default function RegisterPage() {
         <div style={styles.blob2}></div>
       </div>
 
-      <div style={styles.contentWrapper}>
+      <div className="responsive-wrapper" style={styles.contentWrapper}>
         
         {/* HEADER */}
-        <div style={styles.header}>
+        <div className="responsive-header" style={styles.header}>
           <div style={styles.logoContainer}>
              <div style={{color: theme.primary}}>
                 <svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path clipRule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fill="currentColor" fillRule="evenodd"></path><path clipRule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fill="currentColor" fillRule="evenodd"></path></svg>
@@ -330,7 +387,7 @@ export default function RegisterPage() {
             <div style={styles.pillBadge}><span style={styles.pillDot}></span>
                 {userType === 'freelancer' ? 'REGISTRO TALENTO' : 'REGISTRO EMPRESA'}
             </div>
-            <h1 style={styles.heroTitle}>
+            <h1 className="responsive-title" style={styles.heroTitle}>
                 {userType === 'freelancer' ? 'El Futuro del Freelance.' : 'Contrata Expertos.'}
             </h1>
             <p style={styles.heroSubtitle}>
@@ -360,14 +417,14 @@ export default function RegisterPage() {
 
         <div style={styles.formCardContainer}>
             <div style={styles.glowEffect}></div>
-            <form onSubmit={handleRegister} style={styles.formCard}>
+            <form onSubmit={handleRegister} className="responsive-card" style={styles.formCard}>
                 
                 {/* 1. DATOS DE ACCESO (COMÚN Y CON OJITOS) */}
                 <div style={styles.formSection}>
                     <h3 style={styles.sectionTitle}>Datos de Cuenta</h3>
                     <InputClassic label="Correo Electrónico" icon={<Icons.Mail/>} name="email" type="email" placeholder="hola@ejemplo.com" onChange={handleChange} required />
                     
-                    <div style={styles.row}>
+                    <div className="mobile-stack" style={styles.row}>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>Contraseña *</label>
                             <div style={{...styles.inputWrapper, paddingRight: '40px'}}>
@@ -398,11 +455,11 @@ export default function RegisterPage() {
                     <>
                         <div style={styles.formSection}>
                             <h3 style={styles.sectionTitle}>Datos Personales</h3>
-                            <div style={styles.row}>
+                            <div className="mobile-stack" style={styles.row}>
                                 <InputClassic label="Nombres" icon={<Icons.User/>} name="firstName" onChange={handleChange} required />
                                 <InputClassic label="Apellidos" icon={<Icons.User/>} name="lastName" onChange={handleChange} required />
                             </div>
-                            <div style={styles.grid3}>
+                            <div className="mobile-stack" style={styles.grid3}>
                                 <InputClassic label="DNI" icon={<Icons.FileText/>} name="documentId" onChange={handleChange} required />
                                 <InputClassic label="Teléfono" icon={<Icons.Phone/>} name="phoneNumber" onChange={handleChange} required />
                                 <InputClassic label="Fecha Nac." icon={<Icons.Calendar/>} name="birthDate" type="date" onChange={handleChange} required />
@@ -411,7 +468,7 @@ export default function RegisterPage() {
 
                         <div style={styles.formSection}>
                             <h3 style={styles.sectionTitle}>Perfil Profesional</h3>
-                            <div style={styles.row}>
+                            <div className="mobile-stack" style={styles.row}>
                                 <div style={{width: '100%'}}>
                                     <SelectClassic label="Rol Principal" icon={<Icons.Briefcase/>} name="jobTitleId" onChange={handleChange} required value={formData.jobTitleId}>
                                         <option value="" disabled>Selecciona...</option>
@@ -449,7 +506,7 @@ export default function RegisterPage() {
                             <h3 style={styles.sectionTitle}>Datos de la Empresa</h3>
                             <InputClassic label="Razón Social / Nombre Comercial" icon={<Icons.Building/>} name="commercialName" onChange={handleChange} required placeholder="Ej. Tech Solutions SAC" />
                             
-                            <div style={styles.row}>
+                            <div className="mobile-stack" style={styles.row}>
                                 <InputClassic label="RUC / Tax ID" icon={<Icons.FileText/>} name="taxId" onChange={handleChange} required placeholder="20123456789" />
                                 <SelectClassic label="Tamaño Empresa" icon={<Icons.Users/>} name="companySize" onChange={handleChange} required>
                                     <option value="">Selecciona...</option>
@@ -473,7 +530,7 @@ export default function RegisterPage() {
                 {/* UBICACIÓN (Común) */}
                 <div style={styles.formSection}>
                     <h3 style={styles.sectionTitle}>Ubicación {userType === 'company' ? 'Fiscal' : ''}</h3>
-                    <div style={styles.grid3}>
+                    <div className="mobile-stack" style={styles.grid3}>
                         <SelectClassic label="Departamento" icon={<Icons.MapPin/>} name="departmentId" onChange={handleChange} required value={formData.departmentId}>
                             <option value="" disabled>Selecciona...</option>
                             {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -646,4 +703,5 @@ const styles = {
     closeModalBtn: { background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: '5px' },
     modalContent: { color: '#fff', fontSize: '1rem', lineHeight: 1.6 },
     modalBtn: { backgroundColor: theme.primary, color: theme.bgDark, border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' },
+    
 };
