@@ -145,7 +145,7 @@ export default function VerificadoPage() {
                 <span>•</span>
                 <button style={styles.footerLink}>Términos de Servicio</button>
             </div>
-            © 2025 ChambexCity. Todos los derechos reservados.
+            © 2026 ChambexCity. Todos los derechos reservados.
         </footer>
 
       </div>
