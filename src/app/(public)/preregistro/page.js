@@ -106,6 +106,9 @@ export default function RegisterPage() {
     const [tempLangId, setTempLangId] = useState('');
     const [tempLangLevel, setTempLangLevel] = useState('Básico');
     const [activeModal, setActiveModal] = useState(null);
+    const [myLanguages, setMyLanguages] = useState([]);     // Lista que el usuario va agregando
+    const [currentLangId, setCurrentLangId] = useState(""); // El idioma seleccionado actualmente
+    const [currentLangLevel, setCurrentLangLevel] = useState("Basic");
 
     // --- LOGICA DE CARGA DE DATOS ---
     useEffect(() => {
@@ -145,8 +148,30 @@ export default function RegisterPage() {
 
     const addSkill = (skill) => { if (!selectedSkills.includes(skill.id)) setSelectedSkills([...selectedSkills, skill.id]); setSkillSearch(''); };
     const removeSkill = (id) => setSelectedSkills(selectedSkills.filter(s => s !== id));
-    const addLanguage = () => { if (tempLangId && !selectedLanguages.find(l => l.id === parseInt(tempLangId))) { setSelectedLanguages([...selectedLanguages, { id: parseInt(tempLangId), level: tempLangLevel }]); setTempLangId(''); } };
-    const removeLanguage = (id) => setSelectedLanguages(selectedLanguages.filter(l => l.id !== id));
+    const addLanguage = () => {
+        if (!currentLangId) return;
+
+        // Evitar duplicados
+        if (myLanguages.some(l => l.id.toString() === currentLangId.toString())) {
+            return;
+        }
+
+        // Buscar el nombre del idioma en la lista original
+        const langObj = languagesList.find(l => l.id.toString() === currentLangId.toString());
+
+        if (langObj) {
+            setMyLanguages([
+                ...myLanguages,
+                { id: langObj.id, name: langObj.name, level: currentLangLevel }
+            ]);
+            // Resetear selectores
+            setCurrentLangId("");
+            setCurrentLangLevel("Basic");
+        }
+    };
+    const removeLanguage = (id) => {
+        setMyLanguages(myLanguages.filter(l => l.id !== id));
+    };
     const filteredSkills = skillsList.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()) && !selectedSkills.includes(s.id)).slice(0, 5);
 
     const handleRegister = async (e) => {
@@ -155,23 +180,41 @@ export default function RegisterPage() {
         setErrorMsg(null);
 
         try {
-            // 1. VALIDACIONES PREVIAS
-            if (formData.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
-            if (!/\d/.test(formData.password)) throw new Error("La contraseña debe incluir al menos un número.");
+            // ------------------------------------------------------------------
+            // 1. VALIDACIONES (Estrictas solo en lo obligatorio)
+            // ------------------------------------------------------------------
+            if (!formData.email || !formData.email.includes('@')) throw new Error("Correo inválido.");
+            if (formData.password.length < 8) throw new Error("Contraseña muy corta (min 8).");
             if (formData.password !== confirmPassword) throw new Error("Las contraseñas no coinciden.");
 
-            const origin = typeof window !== 'undefined' ? window.location.origin : '';
+            // Validaciones Rol
+            if (userType === 'company') {
+                if (!formData.commercialName.trim()) throw new Error("Razón Social obligatoria.");
+                if (!formData.companySize) throw new Error("Tamaño empresa obligatorio.");
+                if (!formData.industryId) throw new Error("Industria obligatoria.");
+                if (formData.industryId === 'other' && !customIndustry.trim()) throw new Error("Especifica el rubro.");
+            }
+            if (userType === 'freelancer') {
+                if (!formData.firstName.trim() || !formData.lastName.trim()) throw new Error("Nombre completo obligatorio.");
+                if (!formData.jobTitleId) throw new Error("Rubro profesional obligatorio.");
+                if (formData.jobTitleId === 'other' && !customRole.trim()) throw new Error("Especifica tu rubro.");
+                if (selectedSkills.length === 0) throw new Error("Selecciona al menos una habilidad.");
+            }
 
-            // 2. REGISTRO DE AUTENTICACIÓN
+            // ------------------------------------------------------------------
+            // 2. CREAR USUARIO (Auth)
+            // ------------------------------------------------------------------
+            const origin = typeof window !== 'undefined' ? window.location.origin : '';
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
                 options: {
                     emailRedirectTo: `${origin}/verificado`,
                     data: {
-                        first_name: userType === 'freelancer' ? formData.firstName : 'Admin',
-                        last_name: userType === 'freelancer' ? formData.lastName : formData.commercialName,
                         role: userType === 'freelancer' ? 'freelancer' : 'company_admin',
+                        full_name: userType === 'freelancer'
+                            ? `${formData.firstName} ${formData.lastName}`
+                            : formData.commercialName
                     },
                 },
             });
@@ -179,159 +222,153 @@ export default function RegisterPage() {
             if (authError) throw authError;
             if (!authData.user) throw new Error("No se pudo crear el usuario.");
 
-            const userId = authData.user.id;
+            const userId = authData.user.id; // ESTE ES EL ID CLAVE (PK de profiles y freelancers)
 
-            // 3. PERFIL BASE (Tabla: profiles)
-            // Usamos 'upsert' en lugar de 'insert' para evitar errores si tienes triggers automáticos en BD
-            const { error: profileError } = await supabase.from('profiles').upsert({
-                id: userId,
+            // ------------------------------------------------------------------
+            // 3. INSERTAR EN PROFILES (Tabla Base)
+            // ------------------------------------------------------------------
+            // Tu tabla profiles tiene: id, role, phone_number, address, country_id
+            const { error: profileError } = await supabase.from('profiles').insert({
+                id: userId, // Vinculado a auth.users
                 role: userType === 'freelancer' ? 'freelancer' : 'company_admin',
-                phone_number: formData.phoneNumber,
-                address: formData.address,
-                country_id: 'PE',
-                updated_at: new Date()
+                phone_number: formData.phoneNumber || null,
+                // address: Se puede dejar null aquí porque usaremos las tablas _direccion
+                address: formData.address || null,
+                country_id: 'PE' // Default por tu esquema
             });
 
-            if (profileError) {
-                console.error("Error en Profile:", profileError);
-                throw new Error("Error al crear el perfil base.");
-            }
-            let finalIndustryId = formData.industryId;
-            // 4. LÓGICA ESPECÍFICA
+            if (profileError) throw new Error("Error perfil: " + profileError.message);
 
-            if (userType === 'freelancer') {
-                // --- A) FREELANCER ---
+            // ------------------------------------------------------------------
+            // 4. LÓGICA ESPECÍFICA POR ROL
+            // ------------------------------------------------------------------
 
-                // Conversión segura de tipos
-                const jobTitleValue = formData.jobTitleId === 'other' || !formData.jobTitleId ? null : parseInt(formData.jobTitleId);
-                const rateValue = parseFloat(formData.hourlyRate) || 0;
+            if (userType === 'company') {
+                // ==============================================================
+                // ROL: EMPRESA
+                // ==============================================================
 
-                // A.1 Insertar en FREELANCERS
-                const { error: freeError } = await supabase.from('freelancers').insert({
-                    id: userId,
-                    first_name: formData.firstName,
-                    last_name: formData.lastName,
-                    job_title_id: jobTitleValue,
-                    custom_job_title: formData.jobTitleId === 'other' ? customRole : null,
-                    custom_skills: customSkills, // Array de strings
-                    availability: 'available'
-                });
-
-                if (freeError) {
-                    console.error("Error en Freelancer Table:", freeError);
-                    throw new Error(`Error guardando datos de freelancer: ${freeError.message}`);
-                }
-
-                // A.3 Insertar SKILLS (Tabla pivote)
-                if (selectedSkills.length > 0) {
-                    const skillsToInsert = selectedSkills.map(skillId => ({
-                        freelancer_id: userId,
-                        skill_id: parseInt(skillId), // Asegurar que sea entero
-                        level: 1
-                    }));
-                    const { error: skillError } = await supabase.from('freelancer_skills').insert(skillsToInsert);
-                    if (skillError) console.error("Error guardando skills:", skillError);
-                }
-
-            } else {
-                // --- B) EMPRESA ---
-                const cleanName = customIndustry.trim();
-                // Conversión segura de tipos
-                const industryValue = parseInt(formData.industryId) || null;
-                const { data: existing } = await supabase
-                    .from('industries')
-                    .select('id')
-                    .ilike('name', cleanName) // ilike ignora mayúsculas
-                    .single();
-
-                if (existing) {
-                    finalIndustryId = existing.id;
-                } else {
-                    // 2. Si no existe, lo creamos
-                    const { data: newInd, error: createError } = await supabase
-                        .from('industries')
-                        .insert({ name: cleanName })
-                        .select('id')
-                        .single();
-
-                    if (createError) {
-                        console.error(createError);
-                        setErrorMsg("Error al crear el nuevo rubro.");
-                        return;
-                    }
-                    finalIndustryId = newInd.id;
-                }
-                if (selectedIndustry === 'other') {
-                    if (!customIndustry.trim()) {
-                        setErrorMsg("Por favor especifica el rubro.");
-                        return;
-                    }
-
+                // A. Resolver Industria (Si es 'other', crear nueva)
+                let finalIndustryId = parseInt(formData.industryId);
+                if (formData.industryId === 'other') {
                     const cleanName = customIndustry.trim();
-
-                    // 1. Verificamos si ya existe (para evitar duplicados por mayúsculas/minúsculas)
-                    const { data: existing } = await supabase
-                        .from('industries')
-                        .select('id')
-                        .ilike('name', cleanName) // ilike ignora mayúsculas
-                        .single();
-
+                    const { data: existing } = await supabase.from('industries').select('id').ilike('name', cleanName).single();
                     if (existing) {
                         finalIndustryId = existing.id;
                     } else {
-                        // 2. Si no existe, lo creamos
-                        const { data: newInd, error: createError } = await supabase
-                            .from('industries')
-                            .insert({ name: cleanName })
-                            .select('id')
-                            .single();
-
-                        if (createError) {
-                            console.error(createError);
-                            setErrorMsg("Error al crear el nuevo rubro.");
-                            return;
-                        }
+                        const { data: newInd } = await supabase.from('industries').insert({ name: cleanName }).select('id').single();
                         finalIndustryId = newInd.id;
                     }
                 }
-                
+
+                // B. Crear Empresa (Tabla: companies)
+                // IMPORTANTE: Aquí NO enviamos ID. Postgres genera el UUID (gen_random_uuid).
                 const { data: companyData, error: compError } = await supabase.from('companies').insert({
-                    commercial_name: formData.commercialName, // O tus variables de estado
-                    legal_name: formData.commercialName,
-                    tax_id: formData.taxId,
-                    industry_id: finalIndustryId, // <--- USAMOS EL ID RESUELTO
+                    commercial_name: formData.commercialName,
+                    legal_name: formData.commercialName, // Opcional en BD, pero lo llenamos por defecto
+                    tax_id: formData.taxId || null,
+                    industry_id: finalIndustryId,
+                    size: formData.companySize,
                     is_verified: false
-                }).select().single();
+                }).select().single(); // .select().single() recupera el ID generado
 
-                if (compError) {
-                    console.error("Error en Companies Table:", compError);
-                    throw new Error(`Error creando empresa: ${compError.message}`);
-                }
+                if (compError) throw new Error("Error empresa: " + compError.message);
 
-                const newCompanyId = companyData.id;
+                const newCompanyId = companyData.id; // <--- ID DE LA NUEVA EMPRESA
 
-                // B.2 Vincular Usuario con Empresa
-                const { error: memberError } = await supabase.from('company_team_members').insert({
+                // C. Vincular Usuario con Empresa (Tabla: company_team_members)
+                await supabase.from('company_team_members').insert({
                     company_id: newCompanyId,
                     profile_id: userId,
                     role: 'owner',
                     status: 'active'
                 });
 
-                if (memberError) throw new Error("Error vinculando administrador a la empresa.");
+                // D. Insertar Dirección (Tabla: company_direccion)
+                // Solo si el usuario llenó departamento, provincia y distrito.
+                if (formData.departmentId && formData.provinceId && formData.districtId) {
+                    await supabase.from('company_direccion').insert({
+                        company_id: newCompanyId, // FK a companies
+                        country_id: 'PE',
+                        department_id: formData.departmentId,
+                        province_id: formData.provinceId,
+                        district_id: formData.districtId,
+                        // Tu BD exige 'direccion' NOT NULL. Si el usuario no escribió calle, ponemos un texto por defecto.
+                        direccion: formData.address || 'Oficina Principal'
+                    });
+                }
+
+            } else {
+                // ==============================================================
+                // ROL: FREELANCER
+                // ==============================================================
+
+                // A. Resolver Rubro
+                const jobTitleIdValue = formData.jobTitleId === 'other' ? null : parseInt(formData.jobTitleId);
+                const customTitleValue = formData.jobTitleId === 'other' ? customRole.trim() : null;
+
+                // B. Crear Freelancer (Tabla: freelancers)
+                // IMPORTANTE: Aquí SÍ enviamos ID, porque debe ser igual al userId.
+                const { error: freeError } = await supabase.from('freelancers').insert({
+                    id: userId, // FK a profiles
+                    first_name: formData.firstName,
+                    last_name: formData.lastName,
+                    job_title_id: jobTitleIdValue,
+                    custom_job_title: customTitleValue,
+                    document_id: formData.documentId || null,
+                    phone_number: formData.phoneNumber || null,
+                    availability: 'available'
+                });
+
+                if (freeError) throw new Error("Error freelancer: " + freeError.message);
+
+                // C. Skills (Tabla: freelancer_skills)
+                if (selectedSkills.length > 0) {
+                    const skillsToInsert = selectedSkills.map(sid => ({
+                        freelancer_id: userId,
+                        skill_id: parseInt(sid),
+                        level: 1
+                    }));
+                    await supabase.from('freelancer_skills').insert(skillsToInsert);
+                }
+
+                // D. Idiomas (Tabla: freelancer_languages)
+                if (myLanguages.length > 0) {
+                    const langsToInsert = myLanguages.map(lang => ({
+                        freelancer_id: userId,
+                        language_id: parseInt(lang.id),
+                        level: lang.level || 'Basic' // Tu BD usa un ENUM o texto para level
+                    }));
+                    await supabase.from('freelancer_languages').insert(langsToInsert);
+                }
+
+                // E. Insertar Dirección (Tabla: freelancer_direccion)
+                // Solo si llenó la ubicación
+                if (formData.departmentId && formData.provinceId && formData.districtId) {
+                    await supabase.from('freelancer_direccion').insert({
+                        freelancer_id: userId, // FK a freelancers
+                        country_id: 'PE',
+                        department_id: formData.departmentId,
+                        province_id: formData.provinceId,
+                        district_id: formData.districtId,
+                        // Tu BD exige 'direccion' NOT NULL.
+                        direccion: formData.address || 'Domicilio'
+                    });
+                }
             }
 
-            // 5. REDIRECCIÓN EXITOSA
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('pending_onboarding');
-                localStorage.setItem('user_email', formData.email);
-            }
-
+            // ------------------------------------------------------------------
+            // 5. FINALIZAR
+            // ------------------------------------------------------------------
+            if (typeof window !== 'undefined') localStorage.setItem('user_email', formData.email);
             router.push('/verificado');
 
         } catch (error) {
-            console.error("Error en el proceso de registro:", error);
-            setErrorMsg(error.message || 'Ocurrió un error inesperado al guardar los datos.');
+            console.error("Error registro:", error);
+            // Pequeño truco para limpiar mensajes de error feos de Supabase
+            const cleanError = error.message.replace('duplicate key value violates unique constraint', 'Ya existe un registro con estos datos.');
+            setErrorMsg(cleanError);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } finally {
             setLoading(false);
         }
@@ -478,76 +515,117 @@ export default function RegisterPage() {
                     <div style={styles.glowEffect}></div>
                     <form onSubmit={handleRegister} className="responsive-card" style={styles.formCard}>
 
-                        {/* 1. DATOS DE ACCESO (COMÚN Y CON OJITOS) */}
+                        {/* =================================================================
+            SECCIÓN 1: DATOS OBLIGATORIOS (CUENTA)
+           ================================================================= */}
                         <div style={styles.formSection}>
-                            <h3 style={styles.sectionTitle}>Datos de Cuenta</h3>
-                            <InputClassic label="Correo Electrónico" icon={<Icons.Mail />} name="email" type="email" placeholder="hola@ejemplo.com" onChange={handleChange} required />
+                            <h3 style={styles.sectionTitle}>Datos de Cuenta <span style={{ color: theme.error, fontSize: '0.8rem' }}>*</span></h3>
+                            <InputClassic
+                                label="Correo Electrónico"
+                                icon={<Icons.Mail />}
+                                name="email"
+                                type="email"
+                                placeholder="hola@ejemplo.com"
+                                onChange={handleChange}
+                                required
+                            />
 
                             <div className="mobile-stack" style={styles.row}>
+                                {/* Contraseña */}
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>Contraseña *</label>
                                     <div style={{ ...styles.inputWrapper, paddingRight: '40px' }}>
                                         <span style={styles.iconSpan}><Icons.Lock /></span>
-                                        <input name="password" type={showPassword ? "text" : "password"} placeholder="Min. 8 caracteres" onChange={handlePasswordChange} style={{ ...styles.inputElement, paddingLeft: '45px' }} />
-                                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>{showPassword ? <Icons.EyeOff /> : <Icons.Eye />}</button>
+                                        <input
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Min. 8 caracteres"
+                                            onChange={handlePasswordChange}
+                                            style={{ ...styles.inputElement, paddingLeft: '45px' }}
+                                        />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                            {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
+                                        </button>
                                     </div>
+                                    {/* Criterios Pass */}
                                     <div style={{ marginTop: '8px', fontSize: '0.75rem', display: 'flex', gap: '10px' }}>
                                         <span style={{ color: passCriteria.length ? '#7ADCFC' : '#666' }}>{passCriteria.length ? '✓' : '○'} Min. 8 letras</span>
                                         <span style={{ color: passCriteria.hasNumber ? '#7ADCFC' : '#666' }}>{passCriteria.hasNumber ? '✓' : '○'} 1 Número</span>
                                     </div>
                                 </div>
 
+                                {/* Confirmar Contraseña */}
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>Confirmar Contraseña *</label>
                                     <div style={{ ...styles.inputWrapper, paddingRight: '40px' }}>
                                         <span style={styles.iconSpan}><Icons.Lock /></span>
-                                        <input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Repite la contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ ...styles.inputElement, paddingLeft: '45px' }} />
-                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn}>{showConfirmPassword ? <Icons.EyeOff /> : <Icons.Eye />}</button>
+                                        <input
+                                            name="confirmPassword"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            placeholder="Repite la contraseña"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            style={{ ...styles.inputElement, paddingLeft: '45px' }}
+                                        />
+                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn}>
+                                            {showConfirmPassword ? <Icons.EyeOff /> : <Icons.Eye />}
+                                        </button>
                                     </div>
-                                    {confirmPassword && (<span style={{ color: confirmPassword === formData.password ? '#7ADCFC' : '#ff6b6b', fontSize: '0.75rem', marginTop: '5px' }}>{confirmPassword === formData.password ? '✓ Coinciden' : '✕ No coinciden'}</span>)}
+                                    {confirmPassword && (
+                                        <span style={{ color: confirmPassword === formData.password ? '#7ADCFC' : '#ff6b6b', fontSize: '0.75rem', marginTop: '5px' }}>
+                                            {confirmPassword === formData.password ? '✓ Coinciden' : '✕ No coinciden'}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* --- RENDER CONDICIONAL --- */}
+                        {/* =================================================================
+            SECCIÓN 2: DATOS OBLIGATORIOS (PERFIL ESPECÍFICO)
+           ================================================================= */}
                         {userType === 'freelancer' ? (
+                            /* --- FREELANCER OBLIGATORIO --- */
                             <>
                                 <div style={styles.formSection}>
-                                    <h3 style={styles.sectionTitle}>Datos Personales</h3>
+                                    <h3 style={styles.sectionTitle}>Perfil Profesional <span style={{ color: theme.error, fontSize: '0.8rem' }}>*</span></h3>
+
+                                    {/* Nombres y Apellidos */}
                                     <div className="mobile-stack" style={styles.row}>
                                         <InputClassic label="Nombres" icon={<Icons.User />} name="firstName" onChange={handleChange} required />
                                         <InputClassic label="Apellidos" icon={<Icons.User />} name="lastName" onChange={handleChange} required />
                                     </div>
 
-                                </div>
-
-                                <div style={styles.formSection}>
-                                    <h3 style={styles.sectionTitle}>Perfil Profesional</h3>
-                                    <div className="mobile-stack" style={styles.row}>
-                                        <div style={{ width: '100%' }}>
-                                            <SelectClassic label="Rol Principal" icon={<Icons.Briefcase />} name="jobTitleId" onChange={handleChange} required value={formData.jobTitleId}>
-                                                <option value="" disabled>Selecciona...</option>
-                                                {jobTitles.map(j => <option key={j.id} value={j.id}>{j.name}</option>)}
-                                                <option value="other" style={{ color: theme.primary }}>+ Otro</option>
-                                            </SelectClassic>
-                                            {formData.jobTitleId === 'other' && (<input type="text" placeholder="Especifique..." value={customRole} onChange={(e) => setCustomRole(e.target.value)} style={{ ...styles.inputElement, marginTop: '5px', borderBottom: `1px solid ${theme.primary}` }} />)}
-                                        </div>
-
+                                    {/* Rol Principal */}
+                                    <div style={{ marginTop: '15px' }}>
+                                        <SelectClassic label="Rol Principal" icon={<Icons.Briefcase />} name="jobTitleId" onChange={handleChange} required value={formData.jobTitleId}>
+                                            <option value="" disabled>Selecciona...</option>
+                                            {jobTitles.map(j => <option key={j.id} value={j.id}>{j.name}</option>)}
+                                            <option value="other" style={{ color: theme.primary }}>+ Otro</option>
+                                        </SelectClassic>
+                                        {formData.jobTitleId === 'other' && (
+                                            <input type="text" placeholder="Especifique su rol..." value={customRole} onChange={(e) => setCustomRole(e.target.value)} style={{ ...styles.inputElement, marginTop: '5px', borderBottom: `1px solid ${theme.primary}` }} />
+                                        )}
                                     </div>
-
                                 </div>
 
                                 <div style={styles.formSection}>
-                                    <h3 style={styles.sectionTitle}>Habilidades</h3>
+                                    <h3 style={styles.sectionTitle}>Habilidades Principales <span style={{ color: theme.error, fontSize: '0.8rem' }}>*</span></h3>
                                     <div style={{ position: 'relative' }}>
-                                        <InputClassic label="Buscar Habilidad" icon={<Icons.Search />} value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
-                                        {skillSearch && filteredSkills.length > 0 && (<div style={styles.dropdownMenu}>{filteredSkills.map(skill => <DropdownItem key={skill.id} onClick={() => addSkill(skill)}>{skill.name}</DropdownItem>)}</div>)}
+                                        <InputClassic label="Buscar Habilidad (Ej. React, Design...)" icon={<Icons.Search />} value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
+                                        {skillSearch && filteredSkills.length > 0 && (
+                                            <div style={styles.dropdownMenu}>
+                                                {filteredSkills.map(skill => <DropdownItem key={skill.id} onClick={() => addSkill(skill)}>{skill.name}</DropdownItem>)}
+                                            </div>
+                                        )}
                                     </div>
+
                                     {/* Skill Manual */}
                                     <div style={{ marginTop: '5px', marginBottom: '15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
                                         <input type="text" placeholder="¿No está? Añade otra..." value={customSkillInput} onChange={(e) => setCustomSkillInput(e.target.value)} style={{ ...styles.inputElement, fontSize: '0.85rem', padding: '8px 15px', border: `1px dashed ${theme.borderLight}` }} />
                                         <button type="button" onClick={() => { if (customSkillInput.trim()) { setCustomSkills([...customSkills, customSkillInput.trim()]); setCustomSkillInput(''); } }} style={{ ...styles.addBtn, height: '35px', width: '35px' }}><Icons.Plus /></button>
                                     </div>
+
+                                    {/* Chips */}
                                     <div style={styles.chipContainer}>
                                         {selectedSkills.map(sid => <span key={sid} style={styles.chip}>{skillsList.find(s => s.id === sid)?.name}<button type="button" onClick={() => removeSkill(sid)} style={styles.removeBtn}><Icons.X /></button></span>)}
                                         {customSkills.map((sk, idx) => <span key={`c-${idx}`} style={{ ...styles.chip, border: '1px dashed ' + theme.primary }}>{sk}<button type="button" onClick={() => setCustomSkills(customSkills.filter((_, i) => i !== idx))} style={styles.removeBtn}><Icons.X /></button></span>)}
@@ -555,14 +633,13 @@ export default function RegisterPage() {
                                 </div>
                             </>
                         ) : (
-                            /* FORMULARIO EMPRESA */
+                            /* --- EMPRESA OBLIGATORIO --- */
                             <>
                                 <div style={styles.formSection}>
-                                    <h3 style={styles.sectionTitle}>Datos de la Empresa</h3>
-                                    <InputClassic label="Razón Social / Nombre Comercial / Nombre de emprendedor" icon={<Icons.Building />} name="commercialName" onChange={handleChange} required placeholder="Ej. Tech Solutions SAC" />
+                                    <h3 style={styles.sectionTitle}>Datos de la Empresa <span style={{ color: theme.error, fontSize: '0.8rem' }}>*</span></h3>
+                                    <InputClassic label="Razón Social / Nombre Comercial" icon={<Icons.Building />} name="commercialName" onChange={handleChange} required placeholder="Ej. Tech Solutions SAC" />
 
                                     <div className="mobile-stack" style={styles.row}>
-                                        
                                         <SelectClassic label="Tamaño Empresa" icon={<Icons.Users />} name="companySize" onChange={handleChange} required>
                                             <option value="">Selecciona...</option>
                                             <option value="1-10">1-10 empleados (1 si eres persona natural)</option>
@@ -572,22 +649,68 @@ export default function RegisterPage() {
                                         </SelectClassic>
                                     </div>
 
-                                    <SelectClassic label="Industria" icon={<Icons.Briefcase />} name="industryId" onChange={handleChange} required>
-                                        <option value="" disabled>Selecciona Sector...</option>
-                                        {industries.map(ind => <option key={ind.id} value={ind.id}>{ind.name}</option>)}
-                                         <option value="other" style={{ color: theme.primary }}>+ Otro</option>
-                                    </SelectClassic>
-                                    {formData.industryId === 'other' && (<input type="text" placeholder="Especifique..." value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)} style={{ ...styles.inputElement, marginTop: '5px', borderBottom: `1px solid ${theme.primary}` }} />)}
-
+                                    <div style={{ marginTop: '15px' }}>
+                                        <SelectClassic label="Industria" icon={<Icons.Briefcase />} name="industryId" onChange={handleChange} required value={formData.industryId}>
+                                            <option value="" disabled>Selecciona Sector...</option>
+                                            {industries.map(ind => <option key={ind.id} value={ind.id}>{ind.name}</option>)}
+                                            <option value="other" style={{ color: theme.primary }}>+ Otro</option>
+                                        </SelectClassic>
+                                        {formData.industryId === 'other' && (
+                                            <input type="text" placeholder="Especifique el rubro..." value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)} style={{ ...styles.inputElement, marginTop: '5px', borderBottom: `1px solid ${theme.primary}` }} />
+                                        )}
+                                    </div>
                                 </div>
                             </>
                         )}
 
-                        {/* UBICACIÓN (Común) */}
+                        {/* =================================================================
+            SECCIÓN 3: CAMPOS OPCIONALES (SEPARADOR)
+           ================================================================= */}
+
+                        <div style={{ margin: '30px 0', borderTop: `1px dashed ${theme.borderLight}`, position: 'relative' }}>
+                            <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: theme.surfaceDark, padding: '0 15px', color: theme.textSecondary, fontSize: '0.85rem' }}>
+                                Información Adicional (Opcional)
+                            </span>
+                        </div>
+
+                        <div style={styles.formSection}>
+
+                            {/* UBICACIÓN (Departamento, Provincia, Distrito) */}
+                            <div className="mobile-stack" style={{ ...styles.row, marginBottom: '15px' }}>
+                                <SelectClassic label="Departamento" icon={<Icons.MapPin />} name="departmentId" onChange={handleChange} value={formData.departmentId}>
+                                    <option value="">Selecciona...</option>
+                                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                </SelectClassic>
+
+                                <SelectClassic label="Provincia" icon={<Icons.MapPin />} name="provinceId" onChange={handleChange} value={formData.provinceId} disabled={!formData.departmentId}>
+                                    <option value="">Selecciona...</option>
+                                    {provinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </SelectClassic>
+
+                                <SelectClassic label="Distrito" icon={<Icons.MapPin />} name="districtId" onChange={handleChange} value={formData.districtId} disabled={!formData.provinceId}>
+                                    <option value="">Selecciona...</option>
+                                    {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                </SelectClassic>
+                            </div>
+
+                            {/* DOCUMENTOS Y TELÉFONO */}
+                            <div className="mobile-stack" style={styles.row}>
+                                {userType === 'company' ? (
+                                    <InputClassic label="RUC / Tax ID (Opcional)" icon={<Icons.FileText />} name="taxId" onChange={handleChange} placeholder="20..." />
+                                ) : (
+                                    <InputClassic label="Documento Identidad (Opcional)" icon={<Icons.FileText />} name="documentId" onChange={handleChange} placeholder="DNI / Pasaporte" />
+                                )}
+
+                                <InputClassic label="Teléfono de Contacto" icon={<Icons.Phone />} name="phoneNumber" onChange={handleChange} placeholder="+51 999..." />
+                            </div>
 
 
+                        </div>
+
+                        {/* ALERTA ERROR */}
                         {errorMsg && <div style={styles.errorAlert}>⚠️ {errorMsg}</div>}
 
+                        {/* BOTÓN SUBMIT */}
                         <button type="submit" disabled={loading} style={loading ? { ...styles.submitBtn, opacity: 0.7 } : styles.submitBtn}>
                             {loading ? 'Procesando...' : (userType === 'freelancer' ? 'Crear Perfil Freelancer' : 'Crear Cuenta Empresa')}
                         </button>
