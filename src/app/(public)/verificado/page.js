@@ -56,7 +56,7 @@ export default function VerificadoPage() {
         {/* HERO SECTION (Título Principal) */}
         <div style={styles.heroSection}>
             <h1 style={styles.heroTitle}>¡Bienvenido!</h1>
-            <p style={styles.heroSubtitle}>Hemos enviado La confirmación de registro a tu bandeja de entrada.</p>
+            <p style={styles.heroSubtitle}>Pronto tendras noticias sobre nosotros</p>
         </div>
 
         {/* CARD PRINCIPAL (FormCard) */}
@@ -78,7 +78,7 @@ export default function VerificadoPage() {
 
                 {/* Caja de Email (Usando estilos de inputWrapper pero read-only) */}
                 <div style={{width: '100%', maxWidth: '400px'}}>
-                    <label style={styles.label}>Correo enviado a:</label>
+                    <label style={styles.label}>Nos pondremos en contacto por medio del correo:</label>
                     <div style={{...styles.inputWrapper, marginTop: '8px', padding: '14px', justifyContent: 'center'}}>
                         <span style={{color: '#fff', fontWeight: 'bold', fontSize: '1.1rem'}}>
                             {email || 'cargando...'}
@@ -99,16 +99,14 @@ export default function VerificadoPage() {
                     border: `1px solid ${theme.borderLight}`
                 }}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Abre el correo de <strong>ChambexCity</strong></span>
+                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Tendrás noticias muy pronto de parte del equipo de <strong>ChambexCity</strong></span>
                     </div>
                     <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                        <Icons.Check /> <span style={{color: theme.textSecondary}}>Verifica la confirmación y <strong>Bienvenido a ChambexCity</strong></span>
+                        <Icons.Check /> <span style={{color: theme.textSecondary}}> <strong>Bienvenido a ChambexCity</strong></span>
                     </div>
                 </div>
 
-                <p style={{fontSize: '0.85rem', color: theme.textSecondary, marginTop: '10px'}}>
-                    ¿No lo encuentras? Revisa tu carpeta de Spam.
-                </p>
+                
             </div>
 
           </div>
