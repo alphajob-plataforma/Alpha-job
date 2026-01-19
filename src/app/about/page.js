@@ -48,7 +48,7 @@ export default function AboutPage() {
             <div className={styles.imageWrapper}>
               <div className={styles.imageGlow}></div>
               {/* Placeholder para imagen de equipo */}
-              <div className={styles.missionImage} style={{ background: '#232626', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555' }}>
+              <div className={styles.missionImage} style={{ backgroundImage: 'url("/Presentación Conozca a Nuestro Equipo Moderno Negro.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555' }}>
                 <span>Imagen del Equipo</span>
               </div>
             </div>
