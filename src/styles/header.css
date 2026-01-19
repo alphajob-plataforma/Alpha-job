@@ -1,0 +1,31 @@
+.header {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.logo {
+  font-weight: 700;
+  margin-right: 24px;
+}
+
+.search {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  margin-right: 24px;
+}
+
+.nav a {
+  margin-right: 16px;
+  font-size: 14px;
+}
+
+.profile img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}

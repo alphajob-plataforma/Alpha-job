@@ -1,0 +1,520 @@
+/* --- VARIABLES & BASE (Copiado de tu estilo Challenges) --- */
+.container {
+  --bg-charcoal: #131616;
+  --bg-card: #1c1f1f;
+  --bg-card-hover: #222525;
+  --primary-mint: #7ADCB7;
+  --text-beige: #AFA595;
+  --text-white: #ffffff;
+  --border-dark: #2a2e2e;
+  
+  background-color: var(--bg-charcoal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Wrapper principal entre Navbar y Footer */
+.mainWrapper {
+  flex: 1;
+  padding: 3rem 1rem;
+  background-color: var(--bg-charcoal); /* Fondo oscuro */
+}
+
+.innerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- HEADER --- */
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--text-white);
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+
+.highlight {
+  color: var(--primary-mint); /* Acento Menta */
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: var(--text-beige); /* Texto Beige */
+  line-height: 1.6;
+}
+
+/* --- BARRA DE FILTROS --- */
+.filterBar {
+  /* Eliminamos el fondo blanco de caja, lo hacemos transparente o sutil */
+  background-color: transparent; 
+  padding: 0;
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .filterBar {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+}
+
+/* Estilo "Pill" (Pastilla) para los inputs */
+.inputGroup {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.searchIcon, .filterIcon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-beige);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.input, .select {
+  width: 100%;
+  padding: 14px 24px 14px 50px; /* Padding extra para el icono */
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-dark);
+  border-radius: 9999px; /* Forma de píldora completa */
+  font-size: 1rem;
+  color: var(--text-white);
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none; /* Para quitar estilos nativos del select */
+}
+
+.input::placeholder {
+  color: #555;
+}
+
+.input:focus, .select:focus {
+  border-color: var(--primary-mint);
+  box-shadow: 0 0 0 1px rgba(122, 220, 183, 0.2);
+}
+
+.select {
+  width: 100%;
+  padding: 14px 24px 14px 50px;
+  background-color: var(--bg-card); /* Asegúrate que esto sea #1c1f1f */
+  border: 1px solid var(--border-dark);
+  border-radius: 9999px;
+  font-size: 1rem;
+  color: var(--text-white);
+  outline: none;
+  cursor: pointer;
+  appearance: none; /* Quita el estilo nativo de Windows/Mac */
+  
+  /* Icono de flecha personalizado */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23AFA595' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+  background-size: 16px;
+}
+.select option {
+  background-color: #1c1f1f !important; /* Color sólido oscuro */
+  color: #ffffff;
+  padding: 10px;
+}
+.stats {
+  font-size: 0.875rem;
+  color: var(--text-beige);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+}
+
+/* --- GRID DE TARJETAS --- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* --- TARJETA --- */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-dark);
+  border-radius: 16px; /* Bordes más redondeados */
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary-mint); /* Borde menta al hover */
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+}
+
+.cardHeader {
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px; /* Cuadrado redondeado para match moderno */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border-dark);
+}
+
+/* Colores de Avatar (Mantenemos contraste pero quizás un poco más oscuros si quisieras, 
+   pero brillantes se ven bien sobre fondo negro) */
+.color1 { background-color: #ef4444; }
+.color2 { background-color: #f59e0b; }
+.color3 { background-color: #10b981; }
+.color4 { background-color: #3b82f6; }
+.color5 { background-color: #8b5cf6; }
+.color6 { background-color: #ec4899; }
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-white);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--primary-mint); /* Cargo en Menta */
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.starIcon {
+  color: #fbbf24;
+  fill: currentColor;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+
+.ratingValue {
+  font-weight: 700;
+  color: var(--text-white);
+}
+
+.jobsCount {
+  color: var(--text-beige);
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.bio {
+  padding: 0 1.5rem 1.5rem;
+  color: var(--text-beige);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardFooter {
+  background-color: rgba(255, 255, 255, 0.02); /* Muy sutil */
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.rate {
+  font-weight: 700;
+  color: var(--text-white);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1.1rem;
+}
+
+.profileBtn {
+  background-color: var(--primary-mint);
+  border: none;
+  color: var(--bg-charcoal); /* Texto oscuro sobre botón menta */
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profileBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Estados de Carga y Vacío */
+.loading, .empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-beige);
+  font-size: 1.1rem;
+}
+
+/* Spinner personalizado para el tema */
+.spinner {
+  border: 3px solid rgba(122, 220, 183, 0.1);
+  border-left-color: var(--primary-mint);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* ... (Mantén todo tu código anterior igual) ... */
+
+/* --- MODAL (NUEVO) --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85); /* Fondo más oscuro y sólido */
+  /* Eliminamos el backdrop-filter: blur(5px); para quitar el efecto borroso */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modalContent {
+  /* USAR HEXADECIMAL DIRECTO para asegurar opacidad al 100% */
+  background-color: #131616; 
+  /* O puedes usar #1c1f1f si lo quieres gris oscuro como las tarjetas */
+  
+  border: 1px solid var(--border-dark);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  
+  /* Sombra sólida para separarlo del fondo */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 
+              0 40px 80px -20px rgba(0, 0, 0, 1);
+  
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: var(--text-beige);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Modal Header */
+.modalHeader {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+}
+
+.modalAvatar {
+  width: 80px;
+  height: 80px;
+  font-size: 2rem;
+  border-radius: 16px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  border: 2px solid var(--border-dark);
+}
+
+.modalTitle h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-white);
+  margin: 0;
+}
+
+.modalTitle span {
+  color: var(--primary-mint);
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Modal Body */
+.modalBody {
+  padding: 2rem;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: var(--text-beige);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modalBio {
+  color: var(--text-white);
+  line-height: 1.7;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Skills Chips */
+.skillsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.skillChip {
+  background-color: rgba(122, 220, 183, 0.1); /* Fondo menta suave */
+  color: var(--primary-mint);
+  border: 1px solid rgba(122, 220, 183, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Modal Footer */
+.modalFooter {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0,0,0,0.2);
+}
+
+.modalRate {
+  display: flex;
+  flex-direction: column;
+}
+
+.rateLabel {
+  font-size: 0.75rem;
+  color: var(--text-beige);
+}
+
+.rateAmount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-white);
+}
+
+.hireBtn {
+  background-color: var(--primary-mint);
+  color: var(--bg-charcoal);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hireBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(122, 220, 183, 0.4);
+}
+
+/* Animaciones */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
