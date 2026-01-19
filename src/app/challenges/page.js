@@ -114,7 +114,7 @@ export default function ChallengesPage() {
                                 <span className={styles.statLabel}>Desafíos Activos</span>
                             </div>
                             <div className={styles.statItem}>
-                                <span className={styles.statNumber}>1.2k+</span>
+                                <span className={styles.statNumber}>100+</span>
                                 <span className={styles.statLabel}>Usuarios Certificados</span>
                             </div>
                             <div className={styles.statItem}>

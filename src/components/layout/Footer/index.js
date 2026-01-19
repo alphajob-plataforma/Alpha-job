@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import { Twitter, Linkedin, Github } from 'lucide-react'; // Iconos sociales
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -28,13 +27,10 @@ export default function Footer() {
               <h4>Plataforma</h4>
               <Link href="/about">Sobre Nosotros</Link>
               <Link href="#">Privacidad</Link>
-              <Link href="#">Términos</Link>
             </div>
             <div className={styles.linkGroup}>
               <h4>Recursos</h4>
               <Link href="#">Ayuda</Link>
-              <Link href="#">Blog</Link>
-              <Link href="#">Carreras</Link>
             </div>
           </div>
 

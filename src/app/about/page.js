@@ -99,11 +99,11 @@ export default function AboutPage() {
         <section className={styles.statsSection}>
           <div className={styles.statsGrid}>
             <div>
-              <span className={styles.statNumber}>10k+</span>
+              <span className={styles.statNumber}>100</span>
               <span className={styles.statLabel}>Freelancers Activos</span>
             </div>
             <div>
-              <span className={styles.statNumber}>5k+</span>
+              <span className={styles.statNumber}>50</span>
               <span className={styles.statLabel}>Proyectos Exitosos</span>
             </div>
             <div>
