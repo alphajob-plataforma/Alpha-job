@@ -26,7 +26,7 @@ export default function Navbar() {
           <Link href="/about" className={`${styles.link} `}>Sobre Nosotros</Link>
           <Link href="/jobs" className={styles.link}>Ofertas</Link>
           <Link href="/challenges" className={styles.link}>Desafíos</Link>
-          <Link href="/ClientesRecomendados" className={styles.link}>Clientes Recomendados</Link>
+          <Link href="/FreelancersRecomendados" className={styles.link}>Freelancers Recomendados</Link>
         </nav>
 
         {/* --- BOTONES DESKTOP (Derecha) --- */}
