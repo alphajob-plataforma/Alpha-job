@@ -42,7 +42,7 @@ export default function Page() {
             skills ( name )
           )
         `)
-        .limit(60);
+        .limit(1000);
 
       if (error) throw error;
 
@@ -173,10 +173,7 @@ export default function Page() {
                         <Briefcase size={14} />
                         {user.job_titles?.name || 'Freelancer'}
                       </div>
-                      <div className={styles.rating}>
-                        <Star className={styles.starIcon} />
-                        <span className={styles.ratingValue}>{user.rating_avg}</span>
-                      </div>
+                      
                     </div>
                   </div>
 
