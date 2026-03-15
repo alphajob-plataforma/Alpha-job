@@ -272,15 +272,7 @@ export default function FreelancerDashboard() {
               {uploadingCV ? 'Analizando...' : 'Subir CV'}
             </button>
 
-            <div className={styles.successBarContainer} style={{ width: '100%', marginBottom: '1.5rem' }}>
-              <div className={styles.successLabel} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                <span style={{ color: '#E4DFD5' }}>ÉXITO</span>
-                <span style={{ color: '#E4DFD5' }}>95%</span>
-              </div>
-              <div className={styles.progressBar} style={{ width: '100%', height: '6px', background: '#2D3333', borderRadius: '4px', overflow: 'hidden' }}>
-                <div className={styles.progressFill} style={{ width: '95%', height: '100%', background: '#7ADCB7', borderRadius: '4px' }}></div>
-              </div>
-            </div>
+            
 
             <button className={styles.premiumBtn} onClick={() => router.push('/challenges')}>
               Completar Evaluaciones
