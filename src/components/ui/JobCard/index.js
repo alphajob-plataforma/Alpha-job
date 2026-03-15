@@ -13,7 +13,13 @@ export default function JobCard({ job, onClick }) { // <--- Agregamos onClick aq
   const companyName = job.companies?.commercial_name || 'Empresa Confidencial';
   const location = job.companies?.company_direccion?.[0]?.departments?.name || 'Remoto';
   const description = job.description || '';
-  const budget = job.budget_max ? `$${job.budget_max}` : 'A convenir';
+  const budget = job.budget_max 
+  ? new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN',
+      maximumFractionDigits: 0, // Opcional: quita los decimales .00
+    }).format(job.budget_max)
+  : 'A convenir';
   const skills = job.job_skills || []; 
 
   return (
@@ -56,7 +62,6 @@ export default function JobCard({ job, onClick }) { // <--- Agregamos onClick aq
           <span className={styles.priceLabel}>Precio fijo</span>
         </div>
         
-        {/* CAMBIO AQUÍ: El botón ahora ejecuta el onClick que abre el modal */}
         <button 
             onClick={onClick} // <--- Ejecuta la función del padre
             className={styles.button}

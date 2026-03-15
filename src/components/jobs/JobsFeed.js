@@ -92,12 +92,6 @@ export default function JobsFeed({ jobs = [] }) {
       {/* 2. LAYOUT PRINCIPAL (Sidebar + Feed) */}
       <div className="flex flex-col lg:flex-row gap-8 mt-6 items-start relative">
         
-        {/* --- IZQUIERDA: SIDEBAR DE FILTROS --- */}
-        {/* Lógica de clases: 
-            - lg:block: En pantallas grandes siempre visible.
-            - hidden: Oculto por defecto en móvil.
-            - Si showFiltersMobile es true, quitamos el hidden.
-        */}
         <aside className={`
           w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-4 
           ${showFiltersMobile ? 'block' : 'hidden lg:block'}
