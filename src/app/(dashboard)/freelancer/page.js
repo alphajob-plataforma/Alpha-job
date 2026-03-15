@@ -3,11 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import * as pdfjsLib from 'pdfjs-dist';
 
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-}
+// ❌ ELIMINAMOS el import global de pdfjs-dist de aquí arriba
 
 import JobCard from '@/components/ui/JobCard'; 
 import Modal from '@/components/ui/Modal'; 
@@ -73,6 +70,10 @@ export default function FreelancerDashboard() {
 
   const extractTextFromPDF = async (file) => {
     try {
+      // ✅ SOLUCIÓN: Importación dinámica SOLO cuando se ejecuta esta función (en el cliente)
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
       const arrayBuffer = await file.arrayBuffer();
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdf = await loadingTask.promise;
@@ -257,8 +258,6 @@ export default function FreelancerDashboard() {
 
         <aside className={styles.rightCol}>
           <div className={styles.profilePremiumCard}>
-            
-            {/* AQUÍ ESTÁ RESTAURADO TU DISEÑO ORIGINAL DEL SIDEBAR */}
             <div className={styles.avatarContainer} style={{ position: 'relative', display: 'inline-block' }}>
               <div className={styles.avatarCircle}>{freelancerData?.initials}</div>
             </div>
@@ -273,13 +272,19 @@ export default function FreelancerDashboard() {
               {uploadingCV ? 'Analizando...' : 'Subir CV'}
             </button>
 
-            
+            <div className={styles.successBarContainer} style={{ width: '100%', marginBottom: '1.5rem' }}>
+              <div className={styles.successLabel} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                <span style={{ color: '#E4DFD5' }}>ÉXITO</span>
+                <span style={{ color: '#E4DFD5' }}>95%</span>
+              </div>
+              <div className={styles.progressBar} style={{ width: '100%', height: '6px', background: '#2D3333', borderRadius: '4px', overflow: 'hidden' }}>
+                <div className={styles.progressFill} style={{ width: '95%', height: '100%', background: '#7ADCB7', borderRadius: '4px' }}></div>
+              </div>
+            </div>
 
             <button className={styles.premiumBtn} onClick={() => router.push('/challenges')}>
               Completar Evaluaciones
             </button>
-            {/* FIN DEL DISEÑO RESTAURADO */}
-
           </div>
         </aside>
       </div>
@@ -294,6 +299,7 @@ export default function FreelancerDashboard() {
               
               <input className={styles.inputStyle} value={tempData.first_name} onChange={(e) => setTempData({...tempData, first_name: e.target.value})} placeholder="Nombres" />
               <input className={styles.inputStyle} value={tempData.last_name} onChange={(e) => setTempData({...tempData, last_name: e.target.value})} placeholder="Apellidos" />
+              <input className={styles.inputStyle} value={tempData.phone} onChange={(e) => setTempData({...tempData, phone: e.target.value})} placeholder="Teléfono" />
               
               <div style={{height: '1px', background: '#2D3333', margin: '5px 0'}}></div>
               
